@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Homecare App</string>
+    <string name="iadl_title">Instrumental ADLs (IADLs)</string>
+    <string name="reset_all">Reset All</string>
+    <string name="iadl_header">📋 Instrumental Activities of Daily Living</string>
+    <string name="iadl_instruction">Check the box if assistance was provided for each activity.</string>
+    <string name="assistance_provided_indicator">✓ = Assistance Provided</string>
+    <string name="housekeeping">Housekeeping</string>
+    <string name="meal_preparation">Meal Preparation</string>
+    <string name="shopping">Shopping</string>
+    <string name="transportation">Transportation</string>
+    <string name="managing_medicines">Managing Medicines</string>
+    <string name="laundry">Laundry</string>
+    <string name="summary_header">📊 Summary</string>
+    <string name="total_activities">Total Activities:</string>
+    <string name="assistance_provided">Assistance Provided:</string>
+    <string name="no_assistance_needed">No Assistance Needed:</string>
+    <string name="save_iadls">Save IADLs</string>
+    <string name="back_to_adls">← Back to ADLs</string>
+    <string name="time_in_error">Please time-in first!</string>
+    <string name="iadl_save_success">IADLs saved successfully!</string>
+</resources>
