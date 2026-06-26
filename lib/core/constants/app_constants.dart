@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName = 'Homecare App';
-  static const String baseUrl = 'https://omsaiconstructionandengineering.com/backend/';
+  static const String baseUrl = 'http://43.205.243.18/flutter_backend/';
 
   // Storage Keys
   static const String tokenKey = 'auth_token';
