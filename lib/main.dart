@@ -57,7 +57,6 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Get both providers
     final authProvider = Provider.of<AuthProvider>(context);
     final adminAuthProvider = Provider.of<AdminAuthProvider>(context);
 
@@ -74,16 +73,16 @@ class AuthWrapper extends StatelessWidget {
       );
     }
 
-    // ✅ CRITICAL: Check admin FIRST
-    if (adminAuthProvider.isAuthenticated) {
-      print('🟢 AuthWrapper: Redirecting to Admin Dashboard');
-      return const AdminDashboardScreen();
-    }
-
-    // ✅ Then check caregiver
+    // ✅ Check caregiver first (FOR CAREGIVER APP)
     if (authProvider.isAuthenticated) {
       print('🟢 AuthWrapper: Redirecting to Caregiver Home');
       return const HomeScreen();
+    }
+
+    // ✅ Then check admin
+    if (adminAuthProvider.isAuthenticated) {
+      print('🟢 AuthWrapper: Redirecting to Admin Dashboard');
+      return const AdminDashboardScreen();
     }
 
     // ✅ Show login screen if neither is authenticated

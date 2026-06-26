@@ -30,7 +30,7 @@ class AuthProvider extends ChangeNotifier {
       if (_token != null && _token!.isNotEmpty) {
         final role = prefs.getString('user_role') ?? '';
 
-        // ✅ Only load if role is caregiver, NOT admin
+        // ✅ Only load if role is caregiver
         if (role == 'caregiver') {
           _isAuthenticated = true;
           _user = UserModel(
@@ -40,13 +40,11 @@ class AuthProvider extends ChangeNotifier {
           );
           print('✅ AuthProvider: Loaded caregiver: ${_user?.name}');
         } else {
-          // ✅ If role is admin or empty, clear caregiver data
-          print('🟡 AuthProvider: Role is "$role", clearing caregiver data');
+          print('🟡 AuthProvider: Invalid role "$role", clearing caregiver data');
           _token = null;
           _isAuthenticated = false;
           _user = null;
 
-          // ✅ Clear caregiver storage
           await prefs.remove(AppConstants.tokenKey);
           await prefs.remove(AppConstants.userIdKey);
           await prefs.remove(AppConstants.userNameKey);
@@ -66,7 +64,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    print('🟡 AuthProvider: Login called for: $email');
+    print('🟡 AuthProvider: Caregiver login attempt for: $email');
 
     try {
       final response = await _apiService.login(email, password);
@@ -79,14 +77,26 @@ class AuthProvider extends ChangeNotifier {
           final userData = response.data['user'] as Map<String, dynamic>;
           final role = userData['role'] as String? ?? 'caregiver';
 
-          // ✅ Only allow caregiver login (NOT admin)
+          // ✅ CRITICAL: Only allow caregiver login
           if (role == 'admin') {
             print('🔴 AuthProvider: Admin user cannot login as caregiver');
             _isLoading = false;
             notifyListeners();
             return ResponseModel(
               status: false,
-              message: 'Please use "Admin Login" button for admin accounts',
+              message: '❌ Invalid credentials. Please use Admin Login for admin accounts.',
+              data: null,
+            );
+          }
+
+          // ✅ Only allow caregiver role
+          if (role != 'caregiver') {
+            print('🔴 AuthProvider: Invalid role for caregiver login: $role');
+            _isLoading = false;
+            notifyListeners();
+            return ResponseModel(
+              status: false,
+              message: '❌ Invalid credentials. Please check your email and password.',
               data: null,
             );
           }
@@ -96,6 +106,14 @@ class AuthProvider extends ChangeNotifier {
           _isAuthenticated = true;
 
           final prefs = await SharedPreferences.getInstance();
+
+          // ✅ Clear admin data when caregiver logs in
+          await prefs.remove('admin_token');
+          await prefs.remove('admin_id');
+          await prefs.remove('admin_name');
+          await prefs.remove('admin_email');
+          await prefs.remove('admin_role');
+
           await prefs.setString(AppConstants.tokenKey, _token!);
           await prefs.setInt(AppConstants.userIdKey, _user!.id);
           await prefs.setString(AppConstants.userNameKey, _user!.name);
@@ -139,6 +157,6 @@ class AuthProvider extends ChangeNotifier {
     _isAuthenticated = false;
 
     notifyListeners();
-    print('✅ AuthProvider: Logged out');
+    print('✅ AuthProvider: Caregiver logged out');
   }
 }

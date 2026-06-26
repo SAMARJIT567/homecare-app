@@ -65,7 +65,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
     final timeProvider = Provider.of<TimeProvider>(context, listen: false);
     final signatureProvider = Provider.of<SignatureProvider>(context, listen: false);
 
-    // Check if time entry exists
     if (timeProvider.currentEntryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -76,7 +75,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
       return;
     }
 
-    // Check if both signatures are provided
     if (!_caregiverSigned || !_policyholderSigned) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -92,7 +90,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
     });
 
     try {
-      // Export signatures as PNG bytes
       final caregiverSignature = await _caregiverController.toPngBytes();
       final policyholderSignature = await _policyholderController.toPngBytes();
 
@@ -109,11 +106,9 @@ class _SignatureScreenState extends State<SignatureScreen> {
         return;
       }
 
-      // Convert to base64 with data URI
       final caregiverBase64 = 'data:image/png;base64,${base64Encode(caregiverSignature)}';
       final policyholderBase64 = 'data:image/png;base64,${base64Encode(policyholderSignature)}';
 
-      // Save signatures
       final response = await signatureProvider.saveSignature(
         timeEntryId: timeProvider.currentEntryId!,
         caregiverSignature: caregiverBase64,
@@ -140,7 +135,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
           ),
         );
 
-        // Navigate directly to Report Screen after save
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             Navigator.pushReplacement(
@@ -177,22 +171,25 @@ class _SignatureScreenState extends State<SignatureScreen> {
     });
   }
 
-  // ✅ Separate method for onPressed - returns void, not Future
-  void _onSavePressed() {
-    _saveSignatures();
-  }
-
   @override
   Widget build(BuildContext context) {
     final signatureProvider = Provider.of<SignatureProvider>(context);
-
-    // Check if both signatures are signed
     final bool canSave = _caregiverSigned && _policyholderSigned;
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Signatures'),
+        title: const Text(
+          'Signatures',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.blue.shade700,
+        elevation: 0,
+        centerTitle: false,
         actions: [
           TextButton(
             onPressed: _clearSignatures,
@@ -205,50 +202,127 @@ class _SignatureScreenState extends State<SignatureScreen> {
       ),
       body: (_isLoading || signatureProvider.isLoading)
           ? const LoadingWidget()
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Caregiver Signature
-            Card(
-              elevation: 2,
-              child: Padding(
+          : Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Caregiver Signature Card
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade100,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '👤 Caregiver Signature',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Chip(
-                          label: Text(
-                            _caregiverSigned ? 'Signed ✅' : 'Pending ⚠️',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Colors.blue,
+                                size: 20,
+                              ),
                             ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Caregiver Signature',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          backgroundColor: _caregiverSigned ? Colors.green : Colors.orange,
+                          decoration: BoxDecoration(
+                            color: _caregiverSigned
+                                ? Colors.green.shade100
+                                : Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _caregiverSigned
+                                    ? Icons.check_circle
+                                    : Icons.pending,
+                                size: 14,
+                                color: _caregiverSigned
+                                    ? Colors.green
+                                    : Colors.orange,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _caregiverSigned ? 'Signed' : 'Pending',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _caregiverSigned
+                                      ? Colors.green.shade700
+                                      : Colors.orange.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Text(
+                      _caregiverSigned
+                          ? '✅ Signature captured successfully'
+                          : '✍️ Draw your signature on the pad above',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _caregiverSigned
+                            ? Colors.green.shade700
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Container(
-                      height: 150,
+                      height: 140,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: _caregiverSigned ? Colors.green : Colors.grey.shade400,
+                          color: _caregiverSigned
+                              ? Colors.green.shade300
+                              : Colors.grey.shade300,
                           width: _caregiverSigned ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
                       ),
                       child: Signature(
                         controller: _caregiverController,
@@ -256,17 +330,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          _caregiverSigned
-                              ? '✅ Signature captured'
-                              : '✍️ Sign above using finger/stylus',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _caregiverSigned ? Colors.green : Colors.grey.shade600,
-                          ),
-                        ),
                         TextButton(
                           onPressed: () {
                             _caregiverController.clear();
@@ -274,59 +339,127 @@ class _SignatureScreenState extends State<SignatureScreen> {
                               _caregiverSigned = false;
                             });
                           },
-                          child: const Text(
-                            'Clear',
-                            style: TextStyle(color: Colors.red),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
                           ),
+                          child: const Text('Clear'),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Policyholder Signature
-            Card(
-              elevation: 2,
-              child: Padding(
+              // Policyholder Signature Card
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade100,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          '👤 Policyholder Signature',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Chip(
-                          label: Text(
-                            _policyholderSigned ? 'Signed ✅' : 'Pending ⚠️',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.person_outline,
+                                color: Colors.green,
+                                size: 20,
+                              ),
                             ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Policyholder Signature',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          backgroundColor: _policyholderSigned ? Colors.green : Colors.orange,
+                          decoration: BoxDecoration(
+                            color: _policyholderSigned
+                                ? Colors.green.shade100
+                                : Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _policyholderSigned
+                                    ? Icons.check_circle
+                                    : Icons.pending,
+                                size: 14,
+                                color: _policyholderSigned
+                                    ? Colors.green
+                                    : Colors.orange,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _policyholderSigned ? 'Signed' : 'Pending',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: _policyholderSigned
+                                      ? Colors.green.shade700
+                                      : Colors.orange.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Text(
+                      _policyholderSigned
+                          ? '✅ Signature captured successfully'
+                          : '✍️ Draw your signature on the pad above',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _policyholderSigned
+                            ? Colors.green.shade700
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Container(
-                      height: 150,
+                      height: 140,
                       width: double.infinity,
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: _policyholderSigned ? Colors.green : Colors.grey.shade400,
+                          color: _policyholderSigned
+                              ? Colors.green.shade300
+                              : Colors.grey.shade300,
                           width: _policyholderSigned ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
                       ),
                       child: Signature(
                         controller: _policyholderController,
@@ -334,17 +467,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          _policyholderSigned
-                              ? '✅ Signature captured'
-                              : '✍️ Sign above using finger/stylus',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _policyholderSigned ? Colors.green : Colors.grey.shade600,
-                          ),
-                        ),
                         TextButton(
                           onPressed: () {
                             _policyholderController.clear();
@@ -352,48 +476,71 @@ class _SignatureScreenState extends State<SignatureScreen> {
                               _policyholderSigned = false;
                             });
                           },
-                          child: const Text(
-                            'Clear',
-                            style: TextStyle(color: Colors.red),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
                           ),
+                          child: const Text('Clear'),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-            // ✅ Fixed: Save Button - Uses _onSavePressed (void)
-            CustomButton(
-              onPressed: canSave ? _onSavePressed : null,
-              text: '💾 Save Signatures',
-              isFullWidth: true,
-              color: canSave ? Colors.green : Colors.grey,
-            ),
-
-            const SizedBox(height: 16),
-            Text(
-              'Please sign using your finger or stylus on the above pads.',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
+              // Save Button
+              CustomButton(
+                onPressed: canSave ? _onSavePressed : null,
+                text: '💾 Save Signatures',
+                isFullWidth: true,
+                color: canSave ? Colors.blue.shade700 : Colors.grey,
               ),
-              textAlign: TextAlign.center,
-            ),
 
-            const SizedBox(height: 8),
-            // Back to Home button
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('← Back to Home'),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Please sign using your finger or stylus on the above pads.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('← Back to Home'),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  void _onSavePressed() {
+    _saveSignatures();
   }
 }

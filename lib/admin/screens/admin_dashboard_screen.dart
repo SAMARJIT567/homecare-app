@@ -57,7 +57,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: const Text(
           'Admin Dashboard',
           style: TextStyle(
-            color: Colors.white, // ✅ Fixed - White color
+            color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -93,14 +93,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          // ✅ Fixed Logout - Clear navigation stack
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await authProvider.logout();
               if (!mounted) return;
-              Navigator.pushReplacement(
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => AdminLoginScreen()),
+                    (route) => false,
               );
             },
           ),

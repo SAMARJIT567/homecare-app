@@ -148,27 +148,265 @@ class _TimeInScreenState extends State<TimeInScreen> {
   Widget build(BuildContext context) {
     final timeProvider = Provider.of<TimeProvider>(context);
 
-    return Expanded(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue.shade50, Colors.white],
+        ),
+      ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+            // Header
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade700, Colors.blue.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade200.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
                 children: [
-                  _buildHeaderSection(),
-                  const SizedBox(height: 16),
-                  _buildWeeklyScheduleTable(),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Start Shift',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Begin your shift',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 8),
+
+            // Form Card
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade100,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Policyholder & Provider',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    CustomTextField(
+                      controller: _policyholderNameController,
+                      label: 'Name',
+                      hint: 'Policyholder name',
+                      prefixIcon: Icons.person_outline,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 6),
+
+                    CustomTextField(
+                      controller: _policyholderIdController,
+                      label: 'ID',
+                      hint: 'Policyholder ID',
+                      prefixIcon: Icons.badge_outlined,
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Enter valid number';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 6),
+
+                    CustomTextField(
+                      controller: _providerNameController,
+                      label: 'Provider',
+                      hint: 'Auto-filled',
+                      prefixIcon: Icons.business_outlined,
+                      readOnly: true,
+                    ),
+                    const SizedBox(height: 6),
+
+                    CustomTextField(
+                      controller: _providerPhoneController,
+                      label: 'Phone',
+                      hint: 'Provider phone',
+                      prefixIcon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Schedule Card
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade100,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '📅 Schedule',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  InkWell(
+                    onTap: () => _selectDate(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Date',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.calendar_today, size: 14),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        isDense: true,
+                      ),
+                      child: Text(
+                        _selectedDate,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  InkWell(
+                    onTap: () => _selectTimeIn(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Time In',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.access_time, size: 14),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        isDense: true,
+                      ),
+                      child: Text(
+                        _selectedTimeIn,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // ✅ Removed SizedBox(height: 10) - was causing 5px overflow
+
+            // Button
             (_isLoading || timeProvider.isLoading)
                 ? const LoadingWidget()
                 : CustomButton(
@@ -176,287 +414,11 @@ class _TimeInScreenState extends State<TimeInScreen> {
               text: '▶ Start Shift',
               isFullWidth: true,
             ),
-            const SizedBox(height: 16),
-            _buildLegalDisclaimer(),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildHeaderSection() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '📋 Policyholder & Provider Information',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _policyholderNameController,
-              label: 'Policyholder Name',
-              hint: 'Enter policyholder name',
-              prefixIcon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter policyholder name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _policyholderIdController,
-              label: 'Policyholder ID',
-              hint: 'Enter ID (e.g., 1)',
-              prefixIcon: Icons.badge,
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter policyholder ID';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _providerNameController,
-              label: 'Provider Name',
-              hint: 'Auto-filled',
-              prefixIcon: Icons.business,
-              readOnly: true,
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _providerPhoneController,
-              label: 'Provider Phone',
-              hint: 'Enter phone number',
-              prefixIcon: Icons.phone,
-              keyboardType: TextInputType.phone,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeeklyScheduleTable() {
-    final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekDays = List.generate(7, (index) {
-      final date = weekStart.add(Duration(days: index));
-      return {
-        'day': ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][index],
-        'date': DateFormatter.formatDateTime(date, format: 'MM/dd'),
-      };
-    });
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              '📅 Weekly Schedule',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            // ✅ Reduced from 8 to 4
             const SizedBox(height: 4),
-            const Text(
-              'Tap on today\'s time to set Time In',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Date',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      'Day',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      'Time In',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ...weekDays.map((day) {
-              final isToday = day['date'] == DateFormatter.formatDateTime(
-                DateTime.now(),
-                format: 'MM/dd',
-              );
-
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: isToday ? Colors.blue.shade50 : Colors.transparent,
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.shade200),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        day['date'] ?? '',
-                        style: TextStyle(
-                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        day['day'] ?? '',
-                        style: TextStyle(
-                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: isToday
-                          ? InkWell(
-                        onTap: () => _selectTimeIn(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 16,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _selectedTimeIn,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_drop_down,
-                                size: 16,
-                                color: Colors.blue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                          : Text(
-                        '--:--',
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectDate(context),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Date of Service',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.calendar_today),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                      child: Text(_selectedDate),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => _selectTimeIn(context),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Time In',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.access_time),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                      child: Text(_selectedTimeIn),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildLegalDisclaimer(),
+            const SizedBox(height: 4),
           ],
         ),
       ),
@@ -465,18 +427,18 @@ class _TimeInScreenState extends State<TimeInScreen> {
 
   Widget _buildLegalDisclaimer() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: const Text(
-        '⚠️ By signing below, I certify that the information provided on this form is a true and accurate accounting of the services provided. Any person who knowingly presents a false or fraudulent claim is guilty of a crime and may be subject to fines and confinement.',
+        '⚠️ By signing, I certify that the information is true and accurate. False claims are punishable.',
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 8,
           color: Colors.grey,
-          height: 1.4,
+          height: 1.1,
         ),
       ),
     );

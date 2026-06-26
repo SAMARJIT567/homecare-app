@@ -90,7 +90,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
       return;
     }
 
-    // ✅ Check if all ADLs are filled
     final hasEmptyADL = _adls.values.any((value) => value == null);
     if (hasEmptyADL) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +125,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
         ),
       );
 
-      // ✅ Navigate back to Home
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -135,51 +133,172 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
   }
 
   void _showADLSelector(String key, String label) {
+    // ✅ Fixed: Using DraggableScrollableSheet for full height
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Select $label Level',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Choose the level of assistance required:',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 16),
-            ...AppConstants.adlLevels.map((level) {
-              return ListTile(
-                title: Text(
-                  AppConstants.adlLevelMap[level] ?? level,
-                  style: const TextStyle(fontSize: 16),
+          ),
+          child: Column(
+            children: [
+              // Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                leading: Radio<String>(
-                  value: level,
-                  groupValue: _adls[key],
-                  activeColor: Colors.blue,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _adls[key] = value;
-                      });
-                      Navigator.pop(context);
-                    }
-                  },
+              ),
+              const SizedBox(height: 16),
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.medical_services,
+                      color: Colors.blue,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Select $label Level',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Choose the level of assistance required',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.close, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 20),
+              // Options List - Scrollable
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.only(bottom: 20),
+                  children: [
+                    ...AppConstants.adlLevels.map((level) {
+                      final isSelected = _adls[key] == level;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? Colors.blue.shade200 : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
+                          leading: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                              shape: BoxShape.circle,
+                            ),
+                            child: isSelected
+                                ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )
+                                : null,
+                          ),
+                          title: Text(
+                            AppConstants.adlLevelMap[level] ?? level,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              color: isSelected ? Colors.blue.shade700 : Colors.black87,
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              level,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                          onTap: () {
+                            setState(() {
+                              _adls[key] = level;
+                            });
+                            Navigator.pop(context);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ],
                 ),
-                onTap: () {
-                  setState(() {
-                    _adls[key] = level;
-                  });
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -191,172 +310,346 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
     final hasEmptyADL = _adls.values.any((value) => value == null);
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Daily Progress'),
+        title: const Text(
+          'Daily Progress',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.blue.shade700,
+        elevation: 0,
+        centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.save, color: Colors.white),
             onPressed: _saveProgress,
           ),
         ],
       ),
       body: progressProvider.isLoading
           ? const LoadingWidget()
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Progress Indicator
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: hasEmptyADL ? Colors.orange.shade50 : Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: hasEmptyADL ? Colors.orange.shade200 : Colors.green.shade200,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    hasEmptyADL ? Icons.warning : Icons.check_circle,
-                    color: hasEmptyADL ? Colors.orange : Colors.green,
+          : Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Progress Indicator
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: hasEmptyADL ? Colors.orange.shade50 : Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: hasEmptyADL ? Colors.orange.shade200 : Colors.green.shade200,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      hasEmptyADL
-                          ? 'Please fill all ADL levels before saving'
-                          : 'All ADLs filled! Ready to save.',
-                      style: TextStyle(
-                        color: hasEmptyADL ? Colors.orange.shade800 : Colors.green.shade800,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: hasEmptyADL ? Colors.orange.shade100 : Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        hasEmptyADL ? Icons.warning : Icons.check_circle,
+                        color: hasEmptyADL ? Colors.orange : Colors.green,
+                        size: 20,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ADLs Section
-            const Text(
-              '📋 Activities of Daily Living (ADLs)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Tap on each activity to select the level of assistance:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            ..._adls.keys.map((key) {
-              final label = key.split('_').map((e) =>
-              e[0].toUpperCase() + e.substring(1)
-              ).join(' ');
-              final isSelected = _adls[key] != null;
-              return Card(
-                elevation: isSelected ? 2 : 0,
-                child: ListTile(
-                  title: Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        hasEmptyADL
+                            ? 'Please fill all ADL levels before saving'
+                            : 'All ADLs filled! Ready to save.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: hasEmptyADL ? Colors.orange.shade800 : Colors.green.shade800,
+                        ),
+                      ),
                     ),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_adls[key] != null)
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ADLs Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade100,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.medical_services,
                             color: Colors.blue,
-                            borderRadius: BorderRadius.circular(12),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'ADLs',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            _adls[key]!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                            '${_adls.values.where((v) => v != null).length}/${_adls.length}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.blue.shade700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey.shade400,
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Activities of Daily Living',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
-                    ],
-                  ),
-                  onTap: () => _showADLSelector(key, label),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._adls.keys.map((key) {
+                      final label = key.split('_').map((e) =>
+                      e[0].toUpperCase() + e.substring(1)
+                      ).join(' ');
+                      final isSelected = _adls[key] != null;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isSelected ? Colors.blue.shade200 : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              color: isSelected ? Colors.blue.shade700 : Colors.black87,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_adls[key] != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade700,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _adls[key]!,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 14,
+                                color: isSelected ? Colors.blue.shade400 : Colors.grey.shade400,
+                              ),
+                            ],
+                          ),
+                          onTap: () => _showADLSelector(key, label),
+                        ),
+                      );
+                    }).toList(),
+                  ],
                 ),
-              );
-            }),
-
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
-
-            // IADLs Section
-            const Text(
-              '🛠 Instrumental ADLs (IADLs)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Check if assistance was provided for each activity:',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 16),
-            ..._iadls.keys.map((key) {
-              final label = key.split('_').map((e) =>
-              e[0].toUpperCase() + e.substring(1)
-              ).join(' ');
-              return Card(
-                child: CheckboxListTile(
-                  title: Text(label),
-                  value: _iadls[key],
-                  activeColor: Colors.blue,
-                  onChanged: (value) {
-                    setState(() {
-                      _iadls[key] = value ?? false;
-                    });
-                  },
+              const SizedBox(height: 16),
+
+              // IADLs Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade100,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              );
-            }),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.house,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'IADLs',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${_iadls.values.where((v) => v == true).length}/${_iadls.length}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.green.shade700,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Instrumental Activities of Daily Living',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._iadls.keys.map((key) {
+                      final label = key.split('_').map((e) =>
+                      e[0].toUpperCase() + e.substring(1)
+                      ).join(' ');
+                      final isChecked = _iadls[key] ?? false;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        decoration: BoxDecoration(
+                          color: isChecked ? Colors.green.shade50 : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isChecked ? Colors.green.shade200 : Colors.grey.shade200,
+                          ),
+                        ),
+                        child: CheckboxListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 2,
+                          ),
+                          title: Text(
+                            label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isChecked ? FontWeight.w600 : FontWeight.w400,
+                              color: isChecked ? Colors.green.shade700 : Colors.black87,
+                            ),
+                          ),
+                          value: _iadls[key],
+                          activeColor: Colors.green.shade700,
+                          checkColor: Colors.white,
+                          onChanged: (value) {
+                            setState(() {
+                              _iadls[key] = value ?? false;
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-            const SizedBox(height: 24),
-            CustomButton(
-              onPressed: _saveProgress,
-              text: '💾 Save Progress',
-              isFullWidth: true,
-              color: hasEmptyADL ? Colors.orange : Colors.blue,
-            ),
-
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const HomeScreen()),
-                );
-              },
-              child: const Text('← Back to Home'),
-            ),
-          ],
+              // Save Button
+              CustomButton(
+                onPressed: _saveProgress,
+                text: '💾 Save Progress',
+                isFullWidth: true,
+                color: hasEmptyADL ? Colors.orange : Colors.blue.shade700,
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                },
+                child: const Text('← Back to Home'),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homecare_app/core/network/api_service.dart';
 import 'package:homecare_app/core/constants/admin_api_endpoints.dart';
+import 'package:homecare_app/core/constants/app_constants.dart';
 import 'package:homecare_app/admin/models/admin_models.dart';
 
 class AdminAuthProvider extends ChangeNotifier {
@@ -29,6 +30,7 @@ class AdminAuthProvider extends ChangeNotifier {
       if (_token != null && _token!.isNotEmpty) {
         final role = prefs.getString('admin_role') ?? '';
 
+        // ✅ Only load if role is admin
         if (role == 'admin') {
           _isAuthenticated = true;
           _adminUser = AdminUser(
@@ -58,7 +60,7 @@ class AdminAuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    print('🟡 AdminAuthProvider: Login attempt for: $email');
+    print('🟡 AdminAuthProvider: Admin login attempt for: $email');
 
     try {
       final response = await _apiService.unAuthDio.post(
@@ -74,13 +76,17 @@ class AdminAuthProvider extends ChangeNotifier {
 
       if (data['status'] == true) {
         final userData = data['data']['user'];
-        final role = userData['role'] ?? 'admin';
+        final role = userData['role'] ?? '';
 
+        // ✅ CRITICAL: Only allow admin login
         if (role != 'admin') {
-          print('🔴 AdminAuthProvider: User is not admin');
+          print('🔴 AdminAuthProvider: Non-admin user cannot login as admin');
           _isLoading = false;
           notifyListeners();
-          return {'success': false, 'message': 'Unauthorized - Admin access only'};
+          return {
+            'success': false,
+            'message': '❌ Invalid credentials. Please use Caregiver Login for caregiver accounts.'
+          };
         }
 
         _adminUser = AdminUser(
@@ -94,6 +100,11 @@ class AdminAuthProvider extends ChangeNotifier {
 
         final prefs = await SharedPreferences.getInstance();
 
+        // ✅ Clear caregiver data when admin logs in
+        await prefs.remove(AppConstants.tokenKey);
+        await prefs.remove(AppConstants.userIdKey);
+        await prefs.remove(AppConstants.userNameKey);
+        await prefs.remove(AppConstants.userEmailKey);
         await prefs.remove('user_role');
 
         await prefs.setString('admin_token', _token!);
@@ -109,7 +120,7 @@ class AdminAuthProvider extends ChangeNotifier {
       } else {
         _isLoading = false;
         notifyListeners();
-        return {'success': false, 'message': data['message'] ?? 'Login failed'};
+        return {'success': false, 'message': data['message'] ?? 'Invalid credentials'};
       }
     } catch (e) {
       print('🔴 AdminAuthProvider: Error: $e');

@@ -39,7 +39,6 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
   }
 
   Future<void> _timeOut() async {
-    // ✅ Validate form
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -49,7 +48,6 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
     try {
       final timeProvider = Provider.of<TimeProvider>(context, listen: false);
 
-      // ✅ Parse rate
       final rate = double.tryParse(_rateController.text.trim());
       if (rate == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,8 +61,6 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
         });
         return;
       }
-
-      print('🟡 TimeOut: Time: $_selectedTime, Rate: $rate');
 
       final response = await timeProvider.registerTimeOut(
         _selectedTime,
@@ -81,7 +77,6 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
           ),
         );
       } else {
-        // ✅ Show success with details
         final totalHours = timeProvider.totalHours?.toStringAsFixed(2) ?? '0.00';
         final totalCharge = timeProvider.totalCharge?.toStringAsFixed(2) ?? '0.00';
 
@@ -93,7 +88,6 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
           ),
         );
 
-        // ✅ Navigate back to Home after delay
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
             Navigator.pushReplacement(
@@ -124,106 +118,268 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
   Widget build(BuildContext context) {
     final timeProvider = Provider.of<TimeProvider>(context);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '⏹ Time Out',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.blue.shade50, Colors.white],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade600, Colors.red.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.shade200.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'End your shift and calculate total hours',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ✅ Time In Display
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      '⏰ Time In:',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Text(
-                      timeProvider.timeInValue ?? 'Not started',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                    child: const Icon(
+                      Icons.stop,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'End Shift',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Complete your shift',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withOpacity(0.85),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Summary Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade100,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Shift Summary',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.login,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              'Time In:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          timeProvider.timeInValue ?? 'Not started',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  InkWell(
+                    onTap: () => _selectTime(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Time Out',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.access_time, size: 16),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        isDense: true,
+                      ),
+                      child: Text(
+                        _selectedTime,
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ✅ Time Out Picker
-              InkWell(
-                onTap: () => _selectTime(context),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Time Out',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.access_time),
                   ),
-                  child: Text(_selectedTime),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
+            ),
+            const SizedBox(height: 10),
 
-              // ✅ Rate Input
-              CustomTextField(
-                controller: _rateController,
-                label: 'Rate (\$)',
-                hint: 'Enter hourly rate (e.g., 25.50)',
-                prefixIcon: Icons.attach_money,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter rate';
-                  }
-                  final rate = double.tryParse(value);
-                  if (rate == null) {
-                    return 'Please enter a valid number';
-                  }
-                  if (rate <= 0) {
-                    return 'Rate must be greater than 0';
-                  }
-                  return null;
-                },
+            // Rate Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade100,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '💰 Rate',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
 
-              // ✅ Button with loading state
-              (_isLoading || timeProvider.isLoading)
-                  ? const LoadingWidget()
-                  : CustomButton(
-                onPressed: _timeOut,
-                text: '⏹ End Shift',
-                isFullWidth: true,
-                color: Colors.red,
+                  CustomTextField(
+                    controller: _rateController,
+                    label: 'Rate (\$)',
+                    hint: 'Enter hourly rate',
+                    prefixIcon: Icons.attach_money,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter rate';
+                      }
+                      final rate = double.tryParse(value);
+                      if (rate == null || rate <= 0) {
+                        return 'Please enter valid rate';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 14),
+
+            // Button
+            (_isLoading || timeProvider.isLoading)
+                ? const LoadingWidget()
+                : CustomButton(
+              onPressed: _timeOut,
+              text: '⏹ End Shift',
+              isFullWidth: true,
+              color: Colors.red,
+            ),
+
+            const SizedBox(height: 8),
+            _buildLegalDisclaimer(),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegalDisclaimer() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: const Text(
+        '⚠️ By signing, I certify that the information is true and accurate. Any person who knowingly presents a false or fraudulent claim is guilty of a crime and may be subject to fines and confinement.',
+        style: TextStyle(
+          fontSize: 8,
+          color: Colors.grey,
+          height: 1.2,
         ),
       ),
     );
