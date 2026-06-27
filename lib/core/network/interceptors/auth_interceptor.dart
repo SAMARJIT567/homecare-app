@@ -6,29 +6,37 @@ import 'package:homecare_app/core/constants/app_constants.dart';
 class AuthInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(AppConstants.tokenKey);
+    // ✅ Check if Authorization header is already set manually
+    // If it is (e.g. from AdminDataProvider), don't overwrite it with the caregiver token
+    if (!options.headers.containsKey('Authorization')) {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(AppConstants.tokenKey);
+
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+    }
 
     // Add CORS headers if needed
     options.headers['Access-Control-Allow-Origin'] = '*';
-
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
-    }
 
     // Add Origin header for web
     if (options.extra['fromWeb'] == true) {
       options.headers['Origin'] = 'http://localhost:64891';
     }
 
-    super.onRequest(options, handler);
+    return handler.next(options);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // Handle token expiration
     if (err.response?.statusCode == 401) {
-      _handleTokenExpired();
+      debugPrint('🔴 AuthInterceptor: 401 Unauthorized detected');
+      // Only clear if it's NOT an admin request (optional: check URL)
+      if (!err.requestOptions.path.contains('admin')) {
+        _handleTokenExpired();
+      }
     }
 
     // Handle CORS errors
@@ -46,7 +54,7 @@ class AuthInterceptor extends Interceptor {
       }
     }
 
-    super.onError(err, handler);
+    return handler.next(err);
   }
 
   // Separate method for retry logic
@@ -69,8 +77,13 @@ class AuthInterceptor extends Interceptor {
   }
 
   void _handleTokenExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    // Navigate to login - handled in main.dart
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Only clear the caregiver token, don't use prefs.clear() which nukes EVERYTHING
+      await prefs.remove(AppConstants.tokenKey);
+      debugPrint('🟢 AuthInterceptor: Caregiver token cleared due to expiration');
+    } catch (e) {
+      debugPrint('🔴 AuthInterceptor: Error clearing token: $e');
+    }
   }
 }

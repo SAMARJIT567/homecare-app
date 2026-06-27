@@ -5,6 +5,7 @@ import 'package:homecare_app/widgets/custom_button.dart';
 import 'package:homecare_app/widgets/custom_text_field.dart';
 import 'package:homecare_app/widgets/loading_widget.dart';
 import 'package:homecare_app/admin/screens/admin_login_screen.dart';
+import 'package:homecare_app/screens/home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -57,6 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
             content: Text('✅ Login successful!'),
             backgroundColor: Colors.green,
           ),
+        );
+        // ✅ Redirect to Home after successful login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
         );
       }
     } catch (e) {

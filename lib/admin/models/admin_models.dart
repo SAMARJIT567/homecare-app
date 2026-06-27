@@ -12,8 +12,15 @@ class AdminUser {
   });
 
   factory AdminUser.fromJson(Map<String, dynamic> json) {
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return AdminUser(
-      id: json['id'] ?? 0,
+      id: _parseInt(json['id']),
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       role: json['role'] ?? 'admin',
@@ -51,12 +58,19 @@ class DashboardStats {
       return 0.0;
     }
 
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return DashboardStats(
-      totalCaregivers: stats['total_caregivers'] ?? 0,
-      totalPolicyholders: stats['total_policyholders'] ?? 0,
-      totalShifts: stats['total_shifts'] ?? 0,
+      totalCaregivers: _parseInt(stats['total_caregivers']),
+      totalPolicyholders: _parseInt(stats['total_policyholders']),
+      totalShifts: _parseInt(stats['total_shifts']),
       totalRevenue: _parseDouble(stats['total_revenue']),
-      pendingShifts: stats['pending_shifts'] ?? 0,
+      pendingShifts: _parseInt(stats['pending_shifts']),
       recentShifts: json['recent_shifts'] ?? [],
       weeklyData: json['weekly_data'] ?? [],
     );
@@ -91,13 +105,20 @@ class Caregiver {
       return 0.0;
     }
 
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return Caregiver(
-      id: json['id'] ?? 0,
+      id: _parseInt(json['id']),
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       address: json['address'],
-      totalShifts: json['total_shifts'] ?? 0,
+      totalShifts: _parseInt(json['total_shifts']),
       totalRevenue: _parseDouble(json['total_revenue']),
     );
   }
@@ -121,13 +142,20 @@ class Policyholder {
   });
 
   factory Policyholder.fromJson(Map<String, dynamic> json) {
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return Policyholder(
-      id: json['id'] ?? 0,
+      id: _parseInt(json['id']),
       name: json['name'] ?? '',
       policyNumber: json['policy_number'] ?? '',
       phone: json['phone'] ?? '',
       address: json['address'],
-      totalShifts: json['total_shifts'] ?? 0,
+      totalShifts: _parseInt(json['total_shifts']),
     );
   }
 }
@@ -172,10 +200,17 @@ class Shift {
       return 0.0;
     }
 
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return Shift(
-      id: json['id'] ?? 0,
-      caregiverId: json['caregiver_id'] ?? 0,
-      policyholderId: json['policyholder_id'] ?? 0,
+      id: _parseInt(json['id']),
+      caregiverId: _parseInt(json['caregiver_id']),
+      policyholderId: _parseInt(json['policyholder_id']),
       date: json['date'] ?? '',
       timeIn: json['time_in'] ?? '',
       timeOut: json['time_out'],

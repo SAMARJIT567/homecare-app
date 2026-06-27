@@ -26,7 +26,7 @@ class AdminDataProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('admin_token');
     } catch (e) {
-      print('Error getting token: $e');
+      debugPrint('🔴 AdminDataProvider: Error getting token: $e');
       return null;
     }
   }
@@ -48,7 +48,7 @@ class AdminDataProvider extends ChangeNotifier {
 
     try {
       final headers = await _getHeaders();
-      print('🟡 Loading dashboard with headers: $headers');
+      debugPrint('🟡 AdminDataProvider: Loading dashboard...');
 
       final response = await _apiService.dio.get(
         AdminApiEndpoints.getFullUrl(AdminApiEndpoints.dashboard),
@@ -56,19 +56,18 @@ class AdminDataProvider extends ChangeNotifier {
       );
 
       final data = response.data;
-      print('🟢 Dashboard response: $data');
-
       if (data != null && data['status'] == true) {
         _dashboardStats = DashboardStats.fromJson(data['data']);
+        debugPrint('🟢 AdminDataProvider: Dashboard loaded successfully');
       } else {
-        print('🔴 Dashboard failed: ${data?['message']}');
+        debugPrint('🔴 AdminDataProvider: Dashboard failed: ${data?['message']}');
       }
     } catch (e) {
-      print('Error loading dashboard: $e');
+      debugPrint('🔴 AdminDataProvider: Error loading dashboard: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   // ============ CAREGIVERS ============
@@ -78,6 +77,8 @@ class AdminDataProvider extends ChangeNotifier {
 
     try {
       final headers = await _getHeaders();
+      debugPrint('🟡 AdminDataProvider: Loading caregivers...');
+
       final response = await _apiService.dio.get(
         AdminApiEndpoints.getFullUrl(AdminApiEndpoints.caregivers),
         options: Options(headers: headers),
@@ -89,13 +90,16 @@ class AdminDataProvider extends ChangeNotifier {
         _caregivers = caregiversData
             .map((item) => Caregiver.fromJson(item as Map<String, dynamic>))
             .toList();
+        debugPrint('🟢 AdminDataProvider: ${_caregivers.length} caregivers loaded');
+      } else {
+        debugPrint('🔴 AdminDataProvider: Caregivers failed: ${data?['message']}');
       }
     } catch (e) {
-      print('Error loading caregivers: $e');
+      debugPrint('🔴 AdminDataProvider: Error loading caregivers: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<Map<String, dynamic>> createCaregiver(Map<String, dynamic> data) async {
@@ -165,6 +169,8 @@ class AdminDataProvider extends ChangeNotifier {
 
     try {
       final headers = await _getHeaders();
+      debugPrint('🟡 AdminDataProvider: Loading policyholders...');
+
       final response = await _apiService.dio.get(
         AdminApiEndpoints.getFullUrl(AdminApiEndpoints.policyholders),
         options: Options(headers: headers),
@@ -176,13 +182,16 @@ class AdminDataProvider extends ChangeNotifier {
         _policyholders = policyholdersData
             .map((item) => Policyholder.fromJson(item as Map<String, dynamic>))
             .toList();
+        debugPrint('🟢 AdminDataProvider: ${_policyholders.length} policyholders loaded');
+      } else {
+        debugPrint('🔴 AdminDataProvider: Policyholders failed: ${data?['message']}');
       }
     } catch (e) {
-      print('Error loading policyholders: $e');
+      debugPrint('🔴 AdminDataProvider: Error loading policyholders: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<Map<String, dynamic>> createPolicyholder(Map<String, dynamic> data) async {
@@ -252,6 +261,8 @@ class AdminDataProvider extends ChangeNotifier {
 
     try {
       final headers = await _getHeaders();
+      debugPrint('🟡 AdminDataProvider: Loading shifts...');
+
       final Map<String, dynamic> params = {};
       if (startDate != null && startDate.isNotEmpty) params['start_date'] = startDate;
       if (endDate != null && endDate.isNotEmpty) params['end_date'] = endDate;
@@ -269,13 +280,16 @@ class AdminDataProvider extends ChangeNotifier {
         _shifts = shiftsData
             .map((item) => Shift.fromJson(item as Map<String, dynamic>))
             .toList();
+        debugPrint('🟢 AdminDataProvider: ${_shifts.length} shifts loaded');
+      } else {
+        debugPrint('🔴 AdminDataProvider: Shifts failed: ${data?['message']}');
       }
     } catch (e) {
-      print('Error loading shifts: $e');
+      debugPrint('🔴 AdminDataProvider: Error loading shifts: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<Map<String, dynamic>> approveShift(int shiftId, String status) async {
@@ -306,6 +320,7 @@ class AdminDataProvider extends ChangeNotifier {
     _caregivers = [];
     _policyholders = [];
     _shifts = [];
+    _isLoading = false;
     notifyListeners();
   }
 }

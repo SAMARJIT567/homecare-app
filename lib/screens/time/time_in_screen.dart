@@ -157,7 +157,7 @@ class _TimeInScreenState extends State<TimeInScreen> {
         ),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

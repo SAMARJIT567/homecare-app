@@ -74,6 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
+              // ✅ Reset time provider state on logout
+              Provider.of<TimeProvider>(context, listen: false).reset();
               await authProvider.logout();
               if (!mounted) return;
               Navigator.pushAndRemoveUntil(
@@ -554,56 +556,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTimeSection(TimeProvider timeProvider) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (!timeProvider.hasActiveEntry && timeProvider.timeOutValue == null) ...[
-            // ✅ Remove LimitedBox - let TimeInScreen handle its own height
-            const TimeInScreen(),
-          ] else if (timeProvider.hasActiveEntry) ...[
-            const TimeOutScreen(),
-          ] else ...[
-            Card(
+    if (!timeProvider.hasActiveEntry && timeProvider.timeOutValue == null) {
+      return const TimeInScreen();
+    } else if (timeProvider.hasActiveEntry) {
+      return const TimeOutScreen();
+    } else {
+      return Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.check_circle,
-                      size: 40,
+                      size: 60,
                       color: Colors.green,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
                     const Text(
                       'Shift Completed!',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 12),
                     Text(
                       'In: ${timeProvider.timeInValue}  Out: ${timeProvider.timeOutValue}',
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
+                    const SizedBox(height: 8),
                     Text(
                       'Total: ${timeProvider.totalHours?.toStringAsFixed(2)} hrs',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue,
-                        fontSize: 14,
+                        fontSize: 18,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ],
-      ),
-    );
+          ),
+        ),
+      );
+    }
   }
 }

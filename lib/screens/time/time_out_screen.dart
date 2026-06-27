@@ -127,7 +127,7 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
         ),
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

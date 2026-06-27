@@ -18,7 +18,9 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
+    });
   }
 
   @override

@@ -14,8 +14,15 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    int _parseInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return UserModel(
-      id: json['id'] ?? 0,
+      id: _parseInt(json['id']),
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'],

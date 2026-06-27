@@ -74,7 +74,18 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.status && response.data != null) {
         try {
-          final userData = response.data['user'] as Map<String, dynamic>;
+          final userData = response.data['user'];
+          if (userData == null) {
+            print('🔴 AuthProvider: User data is null in response');
+            _isLoading = false;
+            notifyListeners();
+            return ResponseModel(
+              status: false,
+              message: 'Invalid response from server',
+              data: null,
+            );
+          }
+
           final role = userData['role'] as String? ?? 'caregiver';
 
           // ✅ CRITICAL: Only allow caregiver login
