@@ -25,48 +25,68 @@ class _HomeScreenState extends State<HomeScreen> {
   late int _selectedIndex;
   bool _signaturesExist = false;
   bool _progressCompleted = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadTodayData();
-      _checkStatus();
+      _loadAllData();
     });
   }
 
-  Future<void> _loadTodayData() async {
-    final timeProvider = Provider.of<TimeProvider>(context, listen: false);
-    final date = DateFormatter.getCurrentDate();
-    await timeProvider.getTodayLog(date);
-  }
+  Future<void> _loadAllData() async {
+    try {
+      final timeProvider = Provider.of<TimeProvider>(context, listen: false);
+      final signatureProvider =
+          Provider.of<SignatureProvider>(context, listen: false);
+      final progressProvider =
+          Provider.of<ProgressProvider>(context, listen: false);
 
-  Future<void> _checkStatus() async {
-    final timeProvider = Provider.of<TimeProvider>(context, listen: false);
-    final signatureProvider =
-        Provider.of<SignatureProvider>(context, listen: false);
-    final progressProvider =
-        Provider.of<ProgressProvider>(context, listen: false);
+      // Load today's log
+      final date = DateFormatter.getCurrentDate();
+      await timeProvider.getTodayLog(date);
+      print('✅ Today log loaded');
 
-    if (timeProvider.currentEntryId != null) {
-      // Check signatures
-      final sigResponse =
-          await signatureProvider.getSignature(timeProvider.currentEntryId!);
+      // Check status if entry exists
+      if (timeProvider.currentEntryId != null) {
+        final entryId = timeProvider.currentEntryId!;
 
-      // Check progress
-      final progResponse =
-          await progressProvider.getProgress(timeProvider.currentEntryId!);
+        await Future.wait([
+          signatureProvider.getSignature(entryId),
+          progressProvider.getProgress(entryId),
+        ]);
+        print('✅ Status data loaded');
+      }
 
+      // Update UI with actual data
       if (mounted) {
         setState(() {
-          _signaturesExist =
-              sigResponse.status && signatureProvider.signature != null;
-          _progressCompleted =
-              progResponse.status && progressProvider.dailyProgress != null;
+          _signaturesExist = signatureProvider.signature != null;
+          _progressCompleted = progressProvider.dailyProgress != null;
+          _isLoading = false;
+        });
+
+        print('📊 Final Status:');
+        print('  - Signatures: ${_signaturesExist ? '✅' : '❌'}');
+        print('  - Progress: ${_progressCompleted ? '✅' : '❌'}');
+      }
+    } catch (e) {
+      print('🔴 Error loading data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
         });
       }
     }
+  }
+
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _loadAllData();
   }
 
   @override
@@ -155,6 +175,11 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _refreshData,
+            tooltip: 'Refresh',
+          ),
+          IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               Provider.of<TimeProvider>(context, listen: false).reset();
@@ -177,303 +202,322 @@ class _HomeScreenState extends State<HomeScreen> {
             colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          physics: const BouncingScrollPhysics(),
-          children: [
-            // Welcome Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade700, Colors.blue.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade200.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              // Welcome Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          user?.name.isNotEmpty == true
-                              ? user!.name[0].toUpperCase()
-                              : 'C',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Welcome, ${user?.name ?? 'Caregiver'}!',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              DateFormatter.getCurrentDate(),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white.withOpacity(0.8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.green
-                              : (isCompleted ? Colors.grey : Colors.orange),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          isActive
-                              ? 'Active'
-                              : (isCompleted ? 'Done' : 'Not Started'),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 9,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickStat('Today', '24', Icons.today),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child:
-                            _buildQuickStat('This Week', '156', Icons.weekend),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildQuickStat(
-                            'This Month', '432', Icons.calendar_month),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Today's Summary
-            Text(
-              'Today\'s Summary',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-            ),
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: 'Time In',
-                    value: timeProvider.timeInValue ?? '--:--',
-                    icon: Icons.login,
-                    color: Colors.blue.shade700,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: 'Time Out',
-                    value: timeProvider.timeOutValue ?? '--:--',
-                    icon: Icons.logout,
-                    color: Colors.orange.shade700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: 'Hours',
-                    value: timeProvider.totalHours?.toStringAsFixed(1) ?? '0.0',
-                    icon: Icons.timer,
-                    color: Colors.green.shade700,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildSummaryCard(
-                    title: 'Status',
-                    value: isActive
-                        ? 'Active'
-                        : (isCompleted ? 'Done' : 'Pending'),
-                    icon: Icons.info,
-                    color: isActive
-                        ? Colors.green.shade700
-                        : (isCompleted ? Colors.grey : Colors.orange.shade700),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Quick Actions
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-            ),
-            const SizedBox(height: 10),
-
-            if (!isActive && !isCompleted)
-              HomeActionCard(
-                icon: Icons.play_arrow,
-                title: 'Start Shift',
-                subtitle: 'Begin your shift',
-                color: Colors.green.shade700,
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 1;
-                  });
-                },
-              ),
-
-            if (isActive && !isCompleted)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_progressCompleted)
-                    _buildStatusCard(
-                      title: 'Daily Progress Completed',
-                      subtitle: 'ADLs & IADLs recorded',
-                      icon: Icons.assignment_turned_in,
-                    )
-                  else
-                    HomeActionCard(
-                      icon: Icons.checklist,
-                      title: 'Daily Progress',
-                      subtitle: 'Record ADLs & IADLs',
-                      color: Colors.orange.shade700,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = 2;
-                        });
-                      },
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade200.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                  const SizedBox(height: 8),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            user?.name.isNotEmpty == true
+                                ? user!.name[0].toUpperCase()
+                                : 'C',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome, ${user?.name ?? 'Caregiver'}!',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Text(
+                                DateFormatter.getCurrentDate(),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? Colors.green
+                                : (isCompleted ? Colors.grey : Colors.orange),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text(
+                            isActive
+                                ? 'Active'
+                                : (isCompleted ? 'Done' : 'Not Started'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickStat('Today', '24', Icons.today),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickStat(
+                              'This Week', '156', Icons.weekend),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickStat(
+                              'This Month', '432', Icons.calendar_month),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Today's Summary
+              Text(
+                'Today\'s Summary',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryCard(
+                      title: 'Time In',
+                      value: timeProvider.timeInValue ?? '--:--',
+                      icon: Icons.login,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildSummaryCard(
+                      title: 'Time Out',
+                      value: timeProvider.timeOutValue ?? '--:--',
+                      icon: Icons.logout,
+                      color: Colors.orange.shade700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryCard(
+                      title: 'Hours',
+                      value:
+                          timeProvider.totalHours?.toStringAsFixed(1) ?? '0.0',
+                      icon: Icons.timer,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildSummaryCard(
+                      title: 'Status',
+                      value: isActive
+                          ? 'Active'
+                          : (isCompleted ? 'Done' : 'Pending'),
+                      icon: Icons.info,
+                      color: isActive
+                          ? Colors.green.shade700
+                          : (isCompleted
+                              ? Colors.grey
+                              : Colors.orange.shade700),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Quick Actions
+              Text(
+                'Quick Actions',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.black87,
+                    ),
+              ),
+              const SizedBox(height: 10),
+
+              // Loading state
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else ...[
+                // Not Started - Show Start Shift
+                if (!isActive && !isCompleted)
                   HomeActionCard(
-                    icon: Icons.stop,
-                    title: 'End Shift',
-                    subtitle: 'Complete your shift',
-                    color: Colors.red.shade700,
+                    icon: Icons.play_arrow,
+                    title: 'Start Shift',
+                    subtitle: 'Begin your shift',
+                    color: Colors.green.shade700,
                     onTap: () {
                       setState(() {
                         _selectedIndex = 1;
                       });
                     },
                   ),
-                ],
-              ),
 
-            if (isCompleted)
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildStatusCard(
-                    title: 'Shift Completed',
-                    subtitle: 'Data recorded successfully',
-                    icon: Icons.check_circle,
+                // Active Shift - Show Progress + End Shift
+                if (isActive && !isCompleted)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_progressCompleted)
+                        _buildStatusCard(
+                          title: 'Daily Progress Completed',
+                          subtitle: 'ADLs & IADLs recorded',
+                          icon: Icons.assignment_turned_in,
+                        )
+                      else
+                        HomeActionCard(
+                          icon: Icons.checklist,
+                          title: 'Daily Progress',
+                          subtitle: 'Record ADLs & IADLs',
+                          color: Colors.orange.shade700,
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = 2;
+                            });
+                          },
+                        ),
+                      const SizedBox(height: 8),
+                      HomeActionCard(
+                        icon: Icons.stop,
+                        title: 'End Shift',
+                        subtitle: 'Complete your shift',
+                        color: Colors.red.shade700,
+                        onTap: () {
+                          setState(() {
+                            _selectedIndex = 1;
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  if (_progressCompleted)
-                    _buildStatusCard(
-                      title: 'Daily Progress Completed',
-                      subtitle: 'ADLs & IADLs recorded',
-                      icon: Icons.assignment_turned_in,
-                    )
-                  else
-                    HomeActionCard(
-                      icon: Icons.checklist,
-                      title: 'Daily Progress',
-                      subtitle: 'Record ADLs & IADLs',
-                      color: Colors.orange.shade700,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = 2;
-                        });
-                      },
-                    ),
-                  const SizedBox(height: 8),
-                  if (_signaturesExist)
-                    _buildStatusCard(
-                      title: 'Signature Completed',
-                      subtitle: 'Both parties signed',
-                      icon: Icons.verified,
-                    )
-                  else
-                    HomeActionCard(
-                      icon: Icons.edit,
-                      title: 'Add Signatures',
-                      subtitle: 'Caregiver & Policyholder',
-                      color: Colors.blue.shade700,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = 4;
-                        });
-                      },
-                    ),
-                  const SizedBox(height: 8),
-                  if (_progressCompleted && _signaturesExist)
-                    HomeActionCard(
-                      icon: Icons.picture_as_pdf,
-                      title: 'View Report',
-                      subtitle: 'See certification details',
-                      color: Colors.purple.shade700,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = 3;
-                        });
-                      },
-                    ),
-                ],
-              ),
-            const SizedBox(height: 12),
-          ],
+
+                // Shift Completed - Show all status cards
+                if (isCompleted)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildStatusCard(
+                        title: 'Shift Completed',
+                        subtitle: 'Data recorded successfully',
+                        icon: Icons.check_circle,
+                      ),
+                      const SizedBox(height: 8),
+                      if (_progressCompleted)
+                        _buildStatusCard(
+                          title: 'Daily Progress Completed',
+                          subtitle: 'ADLs & IADLs recorded',
+                          icon: Icons.assignment_turned_in,
+                        )
+                      else
+                        HomeActionCard(
+                          icon: Icons.checklist,
+                          title: 'Daily Progress',
+                          subtitle: 'Record ADLs & IADLs',
+                          color: Colors.orange.shade700,
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = 2;
+                            });
+                          },
+                        ),
+                      const SizedBox(height: 8),
+                      if (_signaturesExist)
+                        _buildStatusCard(
+                          title: 'Signature Completed',
+                          subtitle: 'Both parties signed',
+                          icon: Icons.verified,
+                        )
+                      else
+                        HomeActionCard(
+                          icon: Icons.edit,
+                          title: 'Add Signatures',
+                          subtitle: 'Caregiver & Policyholder',
+                          color: Colors.blue.shade700,
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = 4;
+                            });
+                          },
+                        ),
+                      const SizedBox(height: 8),
+                      if (_progressCompleted && _signaturesExist)
+                        HomeActionCard(
+                          icon: Icons.picture_as_pdf,
+                          title: 'View Report',
+                          subtitle: 'See certification details',
+                          color: Colors.purple.shade700,
+                          onTap: () {
+                            setState(() {
+                              _selectedIndex = 3;
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+              ],
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
@@ -573,7 +617,6 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                // Success Icon Animation/Circle
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -605,8 +648,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // Details Card
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -652,8 +693,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // Next Steps Hint
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

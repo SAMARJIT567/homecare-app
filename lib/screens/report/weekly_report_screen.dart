@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:simple_pdf_generator/simple_pdf_generator.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:open_file/open_file.dart';
 import 'package:homecare_app/providers/time_provider.dart';
 import 'package:homecare_app/providers/report_provider.dart';
 import 'package:homecare_app/widgets/custom_button.dart';
@@ -18,6 +21,9 @@ class WeeklyReportScreen extends StatefulWidget {
 }
 
 class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
+  bool _isDownloading = false;
+  String? _lastSavedPath;
+
   @override
   void initState() {
     super.initState();
@@ -36,76 +42,116 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
     }
   }
 
+  // Check and request storage permission
+  Future<bool> _requestStoragePermission() async {
+    if (!Platform.isAndroid) return true;
+
+    try {
+      // First check if MANAGE_EXTERNAL_STORAGE is already granted (useful for Android 11+)
+      if (await Permission.manageExternalStorage.isGranted) return true;
+
+      // Request Storage Permission
+      // Note: On Android 13+ (API 33), Permission.storage always returns denied.
+      // However, FilePicker uses SAF (Storage Access Framework) which doesn't always need this.
+      final status = await Permission.storage.request();
+
+      if (status.isGranted) return true;
+
+      // If it's Android 13 or newer, Permission.storage is deprecated and might be denied
+      // but the FilePicker can still work. We only want to block if it's permanently denied
+      // on older versions.
+      if (status.isPermanentlyDenied) {
+        if (mounted) {
+          final result = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.security, color: Colors.orange),
+                  SizedBox(width: 10),
+                  Text('Permission Required'),
+                ],
+              ),
+              content: const Text(
+                'Storage access is required to save PDF files. '
+                'Please enable it from app settings.',
+                style: TextStyle(fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                    openAppSettings();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            ),
+          );
+          return result ?? false;
+        }
+      }
+
+      // On Android 13+, even if 'storage' is denied, we can try to proceed
+      // because FilePicker often works regardless as it uses a system activity.
+      return true;
+    } catch (e) {
+      print('Permission request error: $e');
+      return true; // Proceed anyway and let the picker/file write handle errors
+    }
+  }
+
+  // Show directory picker and save PDF
   Future<void> _downloadReport() async {
+    print('🔵 _downloadReport triggered');
     final timeProvider = Provider.of<TimeProvider>(context, listen: false);
     final reportProvider = Provider.of<ReportProvider>(context, listen: false);
 
     if (timeProvider.currentEntryId == null ||
         timeProvider.currentEntryId! <= 0) {
+      print('🟠 No currentEntryId found');
       Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
-          content: Text('No valid time entry found!'),
+          content: Text(
+              'No valid time entry found! Please finish your shift first.'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
 
-    // 1. Ask for permission (Dialog)
-    bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.folder_shared, color: Colors.blue),
-            SizedBox(width: 10),
-            Text('Save to Device'),
-          ],
-        ),
-        content: const Text(
-          'Do you want to grant permission to save this report PDF to your device\'s local storage?',
-          style: TextStyle(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade700,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Grant & Save'),
-          ),
-        ],
-      ),
-    );
+    final hasPermission = await _requestStoragePermission();
+    print('🔵 Permission status: $hasPermission');
+    if (!hasPermission) return;
 
-    if (confirm != true) return;
-
-    // 2. Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    setState(() {
+      _isDownloading = true;
+    });
 
     try {
-      // 3. Ensure report is generated on server
       if (reportProvider.report == null) {
+        print('🔵 Generating report for ID: ${timeProvider.currentEntryId}');
         final response = await reportProvider.generateReport(
           timeProvider.currentEntryId!,
         );
         if (!response.status) {
+          print('🔴 Report generation failed: ${response.message}');
           if (!mounted) return;
-          Navigator.pop(context);
+          setState(() {
+            _isDownloading = false;
+          });
           Globals.scaffoldMessengerKey.currentState?.showSnackBar(
             SnackBar(
               content: Text('Generation failed: ${response.message}'),
@@ -117,8 +163,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
       }
 
       final report = reportProvider.report!;
+      print('✅ Report data ready');
 
-      // 4. Actual PDF Generation logic using simple_pdf_generator
+      // Prepare PDF data
       final List<Map<String, dynamic>> tableData = [
         {
           'Field': 'Policyholder',
@@ -137,11 +184,11 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
         },
         {
           'Field': 'Total Charge',
-          'Detail': '\$${report.totalCharge?.toStringAsFixed(2) ?? '0.00'}'
+          'Detail': report.totalCharge?.toStringAsFixed(2) ?? '0.00'
         },
       ];
 
-      // Add ADLs/IADLs to data
+      // Add ADLs
       if (report.adls != null) {
         report.adls!.forEach((key, value) {
           if (key != 'id' &&
@@ -158,6 +205,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
         });
       }
 
+      print('🔵 Starting PDF generation');
       final pdfDoc = await SimplePdf.generate(
         header: PdfHeader(
           title: 'Care Certification Report',
@@ -171,64 +219,207 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
         ],
       );
 
-      // 5. Save the PDF file
       final bytes = await pdfDoc.save();
       final fileName =
           'Homecare_Report_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      print('✅ PDF document saved to bytes');
 
-      Directory? directory;
+      String? selectedDirectory;
+
       if (Platform.isAndroid) {
-        // Use the external downloads directory which is visible in File Manager
-        // path: /storage/emulated/0/Android/data/com.package.name/files/Download
-        final List<Directory>? externalDirs =
-            await getExternalStorageDirectories(
-                type: StorageDirectory.downloads);
-        directory = externalDirs?.isNotEmpty == true
-            ? externalDirs!.first
-            : await getExternalStorageDirectory();
+        print('🔵 Opening directory picker...');
+        try {
+          selectedDirectory = await FilePicker.platform.getDirectoryPath(
+            dialogTitle: 'Select folder to save PDF',
+          );
+          print('🔵 Picker result: $selectedDirectory');
+        } catch (e) {
+          print('🔴 Directory picker error: $e');
+        }
+
+        // If user cancelled the picker
+        if (selectedDirectory == null) {
+          print('🟠 User cancelled directory selection');
+          if (mounted) {
+            setState(() {
+              _isDownloading = false;
+            });
+          }
+          return;
+        }
+      }
+
+      String finalPath;
+
+      if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
+        finalPath = '$selectedDirectory/$fileName';
       } else {
-        directory = await getApplicationDocumentsDirectory();
+        // Fallback for non-Android or if picker is unavailable
+        final directory = await getApplicationDocumentsDirectory();
+        finalPath = '${directory.path}/$fileName';
       }
 
-      if (directory == null)
-        throw Exception('Could not find a directory to save the file.');
-
-      // Ensure the directory exists
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
-      }
-
-      final String path = '${directory.path}/$fileName';
-      final File file = File(path);
+      print('🔵 Saving file to: $finalPath');
+      final File file = File(finalPath);
       await file.writeAsBytes(bytes, flush: true);
+      print('✅ File written successfully');
 
       if (!mounted) return;
-      Navigator.pop(context); // Close loading
+      setState(() {
+        _isDownloading = false;
+        _lastSavedPath = finalPath;
+      });
 
-      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('✅ Report saved to device!'),
-              Text(
-                'Path: $path',
-                style: const TextStyle(fontSize: 10, color: Colors.white70),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 8),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showSuccessDialog(finalPath);
     } catch (e) {
+      print('🔴 Download error: $e');
       if (!mounted) return;
-      Navigator.pop(context);
+      setState(() {
+        _isDownloading = false;
+      });
       Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text('Failed to save: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  // Modern Success Dialog
+  void _showSuccessDialog(String filePath) {
+    final fileName = filePath.split('/').last;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.all(24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade400, Colors.green.shade600],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                size: 48,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '✅ PDF Saved Successfully!',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'File saved to:',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Text(
+                fileName,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue.shade700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              filePath.replaceAll(fileName, ''),
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Close'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _openFile(filePath);
+                    },
+                    icon: const Icon(Icons.folder_open, size: 18),
+                    label: const Text('Open File'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Open file with default app
+  Future<void> _openFile(String filePath) async {
+    try {
+      final result = await OpenFile.open(filePath);
+      if (result.type != ResultType.done) {
+        Globals.scaffoldMessengerKey.currentState?.showSnackBar(
+          const SnackBar(
+            content: Text('No app found to open this file'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('Error opening file: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -260,8 +451,17 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
             tooltip: 'Refresh',
           ),
           IconButton(
-            icon: const Icon(Icons.download, color: Colors.white),
-            onPressed: _downloadReport,
+            icon: _isDownloading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.download, color: Colors.white),
+            onPressed: _isDownloading ? null : _downloadReport,
             tooltip: 'Download Report',
           ),
         ],
@@ -381,7 +581,7 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                         ),
                       ),
                       Text(
-                        'Report for ending ${report.dateOfService ?? ''}',
+                        'Report for ${report.dateOfService ?? ''}',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.white.withOpacity(0.8),
@@ -425,9 +625,10 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
               _buildInfoRow('Total Hours',
                   report.totalHours?.toStringAsFixed(2) ?? '0.00'),
               _buildInfoRow(
-                  'Rate', '\$${report.rate?.toStringAsFixed(2) ?? '0.00'}'),
+                  'Rate', '${report.rate?.toStringAsFixed(2) ?? '0.00'}'),
+              // ✅ Fixed: Removed $ sign from here
               _buildInfoRow('Total Charge',
-                  '\$${report.totalCharge?.toStringAsFixed(2) ?? '0.00'}',
+                  '${report.totalCharge?.toStringAsFixed(2) ?? '0.00'}',
                   isBold: true),
             ],
           ),
@@ -481,11 +682,9 @@ class _WeeklyReportScreenState extends State<WeeklyReportScreen> {
                         .split('_')
                         .map((e) => e[0].toUpperCase() + e.substring(1))
                         .join(' ');
-
                     final value = entry.value;
                     final bool isProvided =
                         (value == true || value == 1 || value == '1');
-
                     return _buildInfoRow(
                         label, isProvided ? '✅ Provided' : '❌ Not Provided');
                   }).toList()

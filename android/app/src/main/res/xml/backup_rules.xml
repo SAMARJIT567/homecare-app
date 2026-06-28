@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude shared preferences to avoid conflicts -->
+    <exclude domain="sharedpref" path="flutter_shared_preferences.xml" />
+</full-backup-content>
