@@ -4,7 +4,8 @@ import 'package:homecare_app/admin/providers/admin_data_provider.dart';
 import 'package:homecare_app/admin/models/admin_models.dart';
 
 class CaregiversScreen extends StatefulWidget {
-  const CaregiversScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  const CaregiversScreen({super.key, required this.scaffoldKey});
 
   @override
   State<CaregiversScreen> createState() => _CaregiversScreenState();
@@ -29,7 +30,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
     final nameController = TextEditingController(text: caregiver?.name ?? '');
     final emailController = TextEditingController(text: caregiver?.email ?? '');
     final phoneController = TextEditingController(text: caregiver?.phone ?? '');
-    final addressController = TextEditingController(text: caregiver?.address ?? '');
+    final addressController =
+        TextEditingController(text: caregiver?.address ?? '');
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -106,7 +108,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                           controller: nameController,
                           label: 'Full Name',
                           icon: Icons.person_outline,
-                          validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
                         // Email Field
@@ -115,7 +118,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                           label: 'Email Address',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
                         // Phone Field
@@ -124,7 +128,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                           label: 'Phone Number',
                           icon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
-                          validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
                         // Address Field
@@ -140,7 +145,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                             label: 'Password',
                             icon: Icons.lock_outline,
                             obscureText: true,
-                            validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                            validator: (v) =>
+                                v?.isEmpty ?? true ? 'Required' : null,
                           ),
                         ],
                         const SizedBox(height: 32),
@@ -151,7 +157,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(context),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   side: BorderSide(color: Colors.grey.shade300),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -186,7 +193,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                                     data['password'] = passwordController.text;
                                   }
 
-                                  final provider = Provider.of<AdminDataProvider>(
+                                  final provider =
+                                      Provider.of<AdminDataProvider>(
                                     context,
                                     listen: false,
                                   );
@@ -200,7 +208,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(result['message'] ?? 'Success'),
+                                      content:
+                                          Text(result['message'] ?? 'Success'),
                                       backgroundColor: result['success']
                                           ? Colors.green
                                           : Colors.red,
@@ -213,7 +222,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade700,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -388,7 +398,8 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(result['message'] ?? 'Deleted'),
-                          backgroundColor: result['success'] ? Colors.green : Colors.red,
+                          backgroundColor:
+                              result['success'] ? Colors.green : Colors.red,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -439,6 +450,10 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
         centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => widget.scaffoldKey.currentState?.openDrawer(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.white),
@@ -452,6 +467,13 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddEditBottomSheet(),
+        backgroundColor: Colors.blue.shade700,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label:
+            const Text('Add Caregiver', style: TextStyle(color: Colors.white)),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -463,207 +485,210 @@ class _CaregiversScreenState extends State<CaregiversScreen> {
         child: provider.isLoading
             ? const Center(child: CircularProgressIndicator())
             : provider.caregivers.isEmpty
-            ? const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.people_outline, size: 80, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'No Caregivers Found',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Tap + to add your first caregiver',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            ],
-          ),
-        )
-            : ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: provider.caregivers.length,
-          itemBuilder: (context, index) {
-            final caregiver = provider.caregivers[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(
-                  color: Colors.grey.shade50,
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  // Avatar with Gradient
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade400,
-                          Colors.blue.shade700,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
-                      child: Text(
-                        caregiver.name[0].toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  // Details
-                  Expanded(
+                ? const Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(Icons.people_outline,
+                            size: 80, color: Colors.grey),
+                        SizedBox(height: 16),
                         Text(
-                          caregiver.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          caregiver.email,
+                          'No Caregivers Found',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-                        Row(
+                        SizedBox(height: 8),
+                        Text(
+                          'Tap + to add your first caregiver',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: provider.caregivers.length,
+                    itemBuilder: (context, index) {
+                      final caregiver = provider.caregivers[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade100,
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.grey.shade50,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
                           children: [
+                            // Avatar with Gradient
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
+                              width: 52,
+                              height: 52,
                               decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(12),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.blue.shade400,
+                                    Colors.blue.shade700,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.work_outline,
-                                    size: 12,
-                                    color: Colors.blue,
+                              child: Center(
+                                child: Text(
+                                  caregiver.name[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
-                                  const SizedBox(width: 4),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            // Details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Text(
-                                    '${caregiver.totalShifts} shifts',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.blue.shade700,
-                                      fontWeight: FontWeight.w500,
+                                    caregiver.name,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    caregiver.email,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.work_outline,
+                                              size: 12,
+                                              color: Colors.blue,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${caregiver.totalShifts} shifts',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.blue.shade700,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.attach_money,
+                                              size: 12,
+                                              color: Colors.green,
+                                            ),
+                                            Text(
+                                              caregiver.totalRevenue
+                                                  .toStringAsFixed(2),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.green.shade700,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            // Actions
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
                               decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
-                                    Icons.attach_money,
-                                    size: 12,
-                                    color: Colors.green,
-                                  ),
-                                  Text(
-                                    caregiver.totalRevenue
-                                        .toStringAsFixed(2),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.green.shade700,
-                                      fontWeight: FontWeight.w500,
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      color: Colors.blue,
+                                      size: 20,
                                     ),
+                                    onPressed: () => _showAddEditBottomSheet(
+                                        caregiver: caregiver),
+                                    tooltip: 'Edit',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    onPressed: () =>
+                                        _confirmDelete(caregiver.id),
+                                    tooltip: 'Delete',
                                   ),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  // Actions
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit_outlined,
-                            color: Colors.blue,
-                            size: 20,
-                          ),
-                          onPressed: () =>
-                              _showAddEditBottomSheet(caregiver: caregiver),
-                          tooltip: 'Edit',
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
-                            size: 20,
-                          ),
-                          onPressed: () =>
-                              _confirmDelete(caregiver.id),
-                          tooltip: 'Delete',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
       ),
     );
   }

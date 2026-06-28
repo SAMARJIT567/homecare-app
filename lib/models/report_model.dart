@@ -37,19 +37,31 @@ class ReportModel {
       return null;
     }
 
+    // ✅ Helper function to convert dynamic to String safely
+    String? _parseString(dynamic value) {
+      if (value == null) return null;
+      return value.toString();
+    }
+
+    // ✅ Handle nested time_entry if present
+    final timeEntry = json['time_entry'] as Map<String, dynamic>?;
+
     return ReportModel(
       policyholder: json['policyholder'] as Map<String, dynamic>?,
       caregiver: json['caregiver'] as Map<String, dynamic>?,
-      dateOfService: json['date_of_service'] as String?,
-      timeIn: json['time_in'] as String?,
-      timeOut: json['time_out'] as String?,
-      totalHours: _parseDouble(json['total_hours']),
-      rate: _parseDouble(json['rate']),
-      totalCharge: _parseDouble(json['total_charge']),
+      dateOfService:
+          _parseString(timeEntry?['date'] ?? json['date_of_service']),
+      timeIn: _parseString(timeEntry?['time_in'] ?? json['time_in']),
+      timeOut: _parseString(timeEntry?['time_out'] ?? json['time_out']),
+      totalHours:
+          _parseDouble(timeEntry?['total_hours'] ?? json['total_hours']),
+      rate: _parseDouble(timeEntry?['rate'] ?? json['rate']),
+      totalCharge:
+          _parseDouble(timeEntry?['total_charge'] ?? json['total_charge']),
       adls: json['adls'] as Map<String, dynamic>?,
       iadls: json['iadls'] as Map<String, dynamic>?,
       signatures: json['signatures'] as Map<String, dynamic>?,
-      certification: json['certification'] as String?,
+      certification: _parseString(json['certification']),
     );
   }
 

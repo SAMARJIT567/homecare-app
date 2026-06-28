@@ -59,7 +59,8 @@ class _TimeInScreenState extends State<TimeInScreen> {
     );
     if (picked != null) {
       setState(() {
-        _selectedDate = DateFormatter.formatDateTime(picked, format: 'yyyy-MM-dd');
+        _selectedDate =
+            DateFormatter.formatDateTime(picked, format: 'yyyy-MM-dd');
       });
     }
   }
@@ -71,7 +72,8 @@ class _TimeInScreenState extends State<TimeInScreen> {
     );
     if (picked != null) {
       setState(() {
-        _selectedTimeIn = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        _selectedTimeIn =
+            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -86,7 +88,8 @@ class _TimeInScreenState extends State<TimeInScreen> {
     try {
       final timeProvider = Provider.of<TimeProvider>(context, listen: false);
 
-      final policyholderId = int.tryParse(_policyholderIdController.text.trim());
+      final policyholderId =
+          int.tryParse(_policyholderIdController.text.trim());
       if (policyholderId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -148,278 +151,310 @@ class _TimeInScreenState extends State<TimeInScreen> {
   Widget build(BuildContext context) {
     final timeProvider = Provider.of<TimeProvider>(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue.shade50, Colors.white],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Start Shift',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.blue.shade700,
+        elevation: 0,
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade700, Colors.blue.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade200.withOpacity(0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade200.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Start Shift',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Begin your shift',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.white.withOpacity(0.85),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Form Card
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    const Text(
-                      'Policyholder & Provider',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.play_circle_outline,
+                        color: Colors.white,
+                        size: 28,
                       ),
                     ),
-                    const SizedBox(height: 6),
-
-                    CustomTextField(
-                      controller: _policyholderNameController,
-                      label: 'Name',
-                      hint: 'Policyholder name',
-                      prefixIcon: Icons.person_outline,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 6),
-
-                    CustomTextField(
-                      controller: _policyholderIdController,
-                      label: 'ID',
-                      hint: 'Policyholder ID',
-                      prefixIcon: Icons.badge_outlined,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Required';
-                        }
-                        if (int.tryParse(value) == null) {
-                          return 'Enter valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 6),
-
-                    CustomTextField(
-                      controller: _providerNameController,
-                      label: 'Provider',
-                      hint: 'Auto-filled',
-                      prefixIcon: Icons.business_outlined,
-                      readOnly: true,
-                    ),
-                    const SizedBox(height: 6),
-
-                    CustomTextField(
-                      controller: _providerPhoneController,
-                      label: 'Phone',
-                      hint: 'Provider phone',
-                      prefixIcon: Icons.phone_outlined,
-                      keyboardType: TextInputType.phone,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Begin Shift',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Start your caregiving session',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 20),
 
-            // Schedule Card
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+              // Form Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade200,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.assignment_ind_outlined,
+                              size: 18, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Text(
+                            'Policyholder & Provider',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _policyholderNameController,
+                        label: 'Policyholder Name',
+                        hint: 'Enter full name',
+                        prefixIcon: Icons.person_outline,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Required';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _policyholderIdController,
+                        label: 'Policyholder ID',
+                        hint: 'Enter numeric ID',
+                        prefixIcon: Icons.badge_outlined,
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Required';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Enter valid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _providerNameController,
+                        label: 'Provider (Caregiver)',
+                        hint: 'Auto-filled',
+                        prefixIcon: Icons.medical_services_outlined,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _providerPhoneController,
+                        label: 'Provider Phone',
+                        hint: 'Contact number',
+                        prefixIcon: Icons.phone_android_outlined,
+                        keyboardType: TextInputType.phone,
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '📅 Schedule',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
+              const SizedBox(height: 16),
 
-                  InkWell(
-                    onTap: () => _selectDate(context),
-                    borderRadius: BorderRadius.circular(8),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Date',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+              // Schedule Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade200,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.event_available_outlined,
+                            size: 18, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text(
+                          'Shift Schedule',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () => _selectDate(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Date',
+                          labelStyle: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w600),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          prefixIcon: const Icon(Icons.calendar_today_rounded,
+                              color: Colors.blue),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
+                        child: Text(
+                          _selectedDate,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
                         ),
-                        prefixIcon: const Icon(Icons.calendar_today, size: 14),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        isDense: true,
-                      ),
-                      child: Text(
-                        _selectedDate,
-                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  InkWell(
-                    onTap: () => _selectTimeIn(context),
-                    borderRadius: BorderRadius.circular(8),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Time In',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () => _selectTimeIn(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Time In',
+                          labelStyle: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w600),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: Colors.blue, width: 2),
+                          ),
+                          prefixIcon: const Icon(
+                              Icons.access_time_filled_rounded,
+                              color: Colors.blue),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        child: Text(
+                          _selectedTimeIn,
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w500),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
-                        ),
-                        prefixIcon: const Icon(Icons.access_time, size: 14),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        isDense: true,
-                      ),
-                      child: Text(
-                        _selectedTimeIn,
-                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // ✅ Removed SizedBox(height: 10) - was causing 5px overflow
+              const SizedBox(height: 24),
 
-            // Button
-            (_isLoading || timeProvider.isLoading)
-                ? const LoadingWidget()
-                : CustomButton(
-              onPressed: _startShift,
-              text: '▶ Start Shift',
-              isFullWidth: true,
-            ),
+              // Button
+              (_isLoading || timeProvider.isLoading)
+                  ? const Center(child: LoadingWidget())
+                  : CustomButton(
+                      onPressed: _startShift,
+                      text: '▶ Start Shift',
+                      isFullWidth: true,
+                    ),
 
-            // ✅ Reduced from 8 to 4
-            const SizedBox(height: 4),
-            _buildLegalDisclaimer(),
-            const SizedBox(height: 4),
-          ],
+              const SizedBox(height: 16),
+              _buildLegalDisclaimer(),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

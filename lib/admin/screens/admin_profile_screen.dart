@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:homecare_app/admin/providers/admin_auth_provider.dart';
-import 'package:homecare_app/admin/providers/admin_data_provider.dart';
 import 'package:homecare_app/admin/screens/admin_login_screen.dart';
 
 class AdminProfileScreen extends StatefulWidget {
-  const AdminProfileScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  const AdminProfileScreen({super.key, required this.scaffoldKey});
 
   @override
   State<AdminProfileScreen> createState() => _AdminProfileScreenState();
@@ -30,20 +30,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
         centerTitle: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await authProvider.logout();
-              if (!mounted) return;
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => AdminLoginScreen()),
-              );
-            },
-            tooltip: 'Logout',
-          ),
-        ],
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => widget.scaffoldKey.currentState?.openDrawer(),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -63,7 +53,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 padding: const EdgeInsets.all(28),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.blue.shade700, Colors.blue.shade500, Colors.blue.shade300],
+                    colors: [
+                      Colors.blue.shade700,
+                      Colors.blue.shade500,
+                      Colors.blue.shade300
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -244,40 +238,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
               const SizedBox(height: 20),
 
-              // Stats Cards - Full Width Row
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.people,
-                      value: '12',
-                      label: 'Caregivers',
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.assignment,
-                      value: '45',
-                      label: 'Shifts',
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      icon: Icons.attach_money,
-                      value: '\$2,450',
-                      label: 'Revenue',
-                      color: Colors.purple,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
               // Action Buttons - Full Width
               SizedBox(
                 width: double.infinity,
@@ -310,9 +270,11 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                   onPressed: () async {
                     await authProvider.logout();
                     if (!mounted) return;
-                    Navigator.pushReplacement(
+                    Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => AdminLoginScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const AdminLoginScreen()),
+                      (route) => false,
                     );
                   },
                   icon: const Icon(Icons.logout, size: 22),
@@ -385,56 +347,6 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade100,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 22, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade500,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -520,7 +432,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                           controller: nameController,
                           label: 'Full Name',
                           icon: Icons.person_outline,
-                          validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
                         // Email Field
@@ -529,7 +442,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                           label: 'Email Address',
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
-                          validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                          validator: (v) =>
+                              v?.isEmpty ?? true ? 'Required' : null,
                         ),
                         const SizedBox(height: 16),
                         // Password Field (Optional)
@@ -553,7 +467,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                               child: OutlinedButton(
                                 onPressed: () => Navigator.pop(context),
                                 style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   side: BorderSide(color: Colors.grey.shade300),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -579,7 +494,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('✅ Profile updated successfully!'),
+                                      content: Text(
+                                          '✅ Profile updated successfully!'),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -587,7 +503,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade700,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),

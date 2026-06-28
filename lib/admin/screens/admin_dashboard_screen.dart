@@ -53,6 +53,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
+      drawer: AdminSideMenu(
+        selectedIndex: _selectedIndex,
+        onItemSelected: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+          Navigator.pop(context);
+        },
+      ),
+      body: _buildBody(dataProvider),
+    );
+  }
+
+  Widget _buildBody(AdminDataProvider dataProvider) {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboard(dataProvider);
+      case 1:
+        return CaregiversScreen(scaffoldKey: _scaffoldKey);
+      case 2:
+        return PolicyholdersScreen(scaffoldKey: _scaffoldKey);
+      case 3:
+        return ShiftsScreen(scaffoldKey: _scaffoldKey);
+      case 4:
+        return AdminProfileScreen(scaffoldKey: _scaffoldKey);
+      default:
+        return _buildDashboard(dataProvider);
+    }
+  }
+
+  Widget _buildDashboard(AdminDataProvider dataProvider) {
+    if (dataProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final stats = dataProvider.dashboardStats;
+    final authProvider = Provider.of<AdminAuthProvider>(context, listen: false);
+
+    return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Admin Dashboard',
@@ -93,176 +132,134 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // ✅ Fixed Logout - Clear navigation stack
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               await authProvider.logout();
               if (!mounted) return;
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => AdminLoginScreen()),
-                    (route) => false,
+                (route) => false,
               );
             },
           ),
         ],
       ),
-      drawer: AdminSideMenu(
-        selectedIndex: _selectedIndex,
-        onItemSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          Navigator.pop(context);
-        },
-      ),
-      body: _buildBody(dataProvider),
-    );
-  }
-
-  Widget _buildBody(AdminDataProvider dataProvider) {
-    switch (_selectedIndex) {
-      case 0:
-        return _buildDashboard(dataProvider);
-      case 1:
-        return const CaregiversScreen();
-      case 2:
-        return const PolicyholdersScreen();
-      case 3:
-        return const ShiftsScreen();
-      case 4:
-        return const AdminProfileScreen();
-      default:
-        return _buildDashboard(dataProvider);
-    }
-  }
-
-  Widget _buildDashboard(AdminDataProvider dataProvider) {
-    if (dataProvider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final stats = dataProvider.dashboardStats;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue.shade50, Colors.white],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+          ),
         ),
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Section
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade700, Colors.blue.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.shade200,
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade700, Colors.blue.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade200,
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '👋 Welcome back, Admin!',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Here\'s what\'s happening with your business today.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildQuickStat('Today', '24'),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickStat('This Week', '156'),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickStat('This Month', '432'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 20),
+
+              // Stats Grid
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.5,
                 children: [
-                  const Text(
-                    '👋 Welcome back, Admin!',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  AdminStatCard(
+                    title: 'Total Caregivers',
+                    value: stats?.totalCaregivers.toString() ?? '0',
+                    icon: Icons.people,
+                    color: Colors.blue,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Here\'s what\'s happening with your business today.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withOpacity(0.85),
-                    ),
+                  AdminStatCard(
+                    title: 'Policyholders',
+                    value: stats?.totalPolicyholders.toString() ?? '0',
+                    icon: Icons.person_add,
+                    color: Colors.green,
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildQuickStat('Today', '24'),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildQuickStat('This Week', '156'),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildQuickStat('This Month', '432'),
-                      ),
-                    ],
+                  AdminStatCard(
+                    title: 'Total Shifts',
+                    value: stats?.totalShifts.toString() ?? '0',
+                    icon: Icons.access_time,
+                    color: Colors.orange,
+                  ),
+                  AdminStatCard(
+                    title: 'Revenue',
+                    value:
+                        '\$${stats?.totalRevenue.toStringAsFixed(2) ?? '0.00'}',
+                    icon: Icons.attach_money,
+                    color: Colors.purple,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // Stats Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                AdminStatCard(
-                  title: 'Total Caregivers',
-                  value: stats?.totalCaregivers.toString() ?? '0',
-                  icon: Icons.people,
-                  color: Colors.blue,
-                ),
-                AdminStatCard(
-                  title: 'Policyholders',
-                  value: stats?.totalPolicyholders.toString() ?? '0',
-                  icon: Icons.person_add,
-                  color: Colors.green,
-                ),
-                AdminStatCard(
-                  title: 'Total Shifts',
-                  value: stats?.totalShifts.toString() ?? '0',
-                  icon: Icons.access_time,
-                  color: Colors.orange,
-                ),
-                AdminStatCard(
-                  title: 'Revenue',
-                  value: '\$${stats?.totalRevenue.toStringAsFixed(2) ?? '0.00'}',
-                  icon: Icons.attach_money,
-                  color: Colors.purple,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Pending Shifts & Recent Activity
-            Column(
-              children: [
-                _buildPendingShiftsCard(stats?.pendingShifts ?? 0),
-                const SizedBox(height: 12),
-                _buildRecentActivityCard(stats?.recentShifts ?? []),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+              // Recent Activity
+              _buildRecentActivityCard(stats?.recentShifts ?? []),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -297,85 +294,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildPendingShiftsCard(int pendingCount) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade100,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.pending, color: Colors.orange.shade600, size: 20),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Pending Shifts',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            pendingCount.toString(),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.orange,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Shifts awaiting approval',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade500,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _selectedIndex = 3;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange.shade600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('View All'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildRecentActivityCard(List<dynamic> recentShifts) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -401,7 +319,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.history, color: Colors.blue.shade600, size: 20),
+                child:
+                    Icon(Icons.history, color: Colors.blue.shade600, size: 20),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -440,7 +359,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     children: [
                       CircleAvatar(
                         radius: 12,
-                        backgroundColor: isCompleted ? Colors.green.shade100 : Colors.orange.shade100,
+                        backgroundColor: isCompleted
+                            ? Colors.green.shade100
+                            : Colors.orange.shade100,
                         child: Icon(
                           isCompleted ? Icons.check : Icons.pending,
                           size: 12,
@@ -474,9 +395,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isCompleted ? Colors.green.shade100 : Colors.orange.shade100,
+                          color: isCompleted
+                              ? Colors.green.shade100
+                              : Colors.orange.shade100,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -484,7 +408,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           style: TextStyle(
                             fontSize: 8,
                             fontWeight: FontWeight.w600,
-                            color: isCompleted ? Colors.green.shade700 : Colors.orange.shade700,
+                            color: isCompleted
+                                ? Colors.green.shade700
+                                : Colors.orange.shade700,
                           ),
                         ),
                       ),

@@ -6,6 +6,7 @@ import 'package:homecare_app/widgets/custom_button.dart';
 import 'package:homecare_app/widgets/loading_widget.dart';
 import 'package:homecare_app/core/constants/app_constants.dart';
 import 'package:homecare_app/screens/home/home_screen.dart';
+import 'package:homecare_app/core/utils/globals.dart';
 
 class DailyProgressScreen extends StatefulWidget {
   const DailyProgressScreen({super.key});
@@ -38,12 +39,15 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
   @override
   void initState() {
     super.initState();
-    _loadExistingData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingData();
+    });
   }
 
   Future<void> _loadExistingData() async {
     final timeProvider = Provider.of<TimeProvider>(context, listen: false);
-    final progressProvider = Provider.of<ProgressProvider>(context, listen: false);
+    final progressProvider =
+        Provider.of<ProgressProvider>(context, listen: false);
 
     if (timeProvider.currentEntryId != null) {
       await progressProvider.getProgress(timeProvider.currentEntryId!);
@@ -78,10 +82,11 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
 
   Future<void> _saveProgress() async {
     final timeProvider = Provider.of<TimeProvider>(context, listen: false);
-    final progressProvider = Provider.of<ProgressProvider>(context, listen: false);
+    final progressProvider =
+        Provider.of<ProgressProvider>(context, listen: false);
 
     if (timeProvider.currentEntryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text('Please time-in first!'),
           backgroundColor: Colors.orange,
@@ -92,7 +97,7 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
 
     final hasEmptyADL = _adls.values.any((value) => value == null);
     if (hasEmptyADL) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text('Please fill all ADL levels!'),
           backgroundColor: Colors.orange,
@@ -111,29 +116,23 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
     if (!mounted) return;
 
     if (!response.status) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text(response.message),
           backgroundColor: Colors.red,
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text('✅ Progress saved! You can now end your shift.'),
           backgroundColor: Colors.green,
         ),
       );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
     }
   }
 
   void _showADLSelector(String key, String label) {
-    // ✅ Fixed: Using DraggableScrollableSheet for full height
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -161,7 +160,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
           ),
           child: Column(
             children: [
-              // Drag Handle
               Container(
                 width: 40,
                 height: 4,
@@ -171,7 +169,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Header
               Row(
                 children: [
                   Container(
@@ -222,7 +219,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                 ],
               ),
               const Divider(height: 20),
-              // Options List - Scrollable
               Expanded(
                 child: ListView(
                   controller: scrollController,
@@ -233,10 +229,14 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? Colors.blue.shade200 : Colors.grey.shade200,
+                            color: isSelected
+                                ? Colors.blue.shade200
+                                : Colors.grey.shade200,
                           ),
                         ),
                         child: ListTile(
@@ -248,23 +248,29 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                              color: isSelected
+                                  ? Colors.blue.shade700
+                                  : Colors.grey.shade300,
                               shape: BoxShape.circle,
                             ),
                             child: isSelected
                                 ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            )
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 16,
+                                  )
                                 : null,
                           ),
                           title: Text(
                             AppConstants.adlLevelMap[level] ?? level,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                              color: isSelected ? Colors.blue.shade700 : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? Colors.blue.shade700
+                                  : Colors.black87,
                             ),
                           ),
                           trailing: Container(
@@ -273,7 +279,9 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+                              color: isSelected
+                                  ? Colors.blue.shade700
+                                  : Colors.grey.shade300,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -281,7 +289,9 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : Colors.grey.shade600,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ),
@@ -309,8 +319,91 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
     final progressProvider = Provider.of<ProgressProvider>(context);
     final hasEmptyADL = _adls.values.any((value) => value == null);
 
+    if (progressProvider.isLoading) {
+      return const LoadingWidget();
+    }
+
+    if (progressProvider.dailyProgress != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Daily Progress',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.blue.shade700,
+          elevation: 0,
+        ),
+        body: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.blue.shade50, Colors.white],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.green.shade100, width: 8),
+                ),
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  size: 80,
+                  color: Colors.green.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Progress Recorded!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your Daily Progress is Completed.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: CustomButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HomeScreen(initialIndex: 4),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  text: '✍️ Go to Signature Page',
+                  color: Colors.blue.shade700,
+                  isFullWidth: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text(
           'Daily Progress',
@@ -322,7 +415,6 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
         ),
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
-        centerTitle: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.save, color: Colors.white),
@@ -330,9 +422,7 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
           ),
         ],
       ),
-      body: progressProvider.isLoading
-          ? const LoadingWidget()
-          : Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -349,10 +439,14 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: hasEmptyADL ? Colors.orange.shade50 : Colors.green.shade50,
+                  color: hasEmptyADL
+                      ? Colors.orange.shade50
+                      : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: hasEmptyADL ? Colors.orange.shade200 : Colors.green.shade200,
+                    color: hasEmptyADL
+                        ? Colors.orange.shade200
+                        : Colors.green.shade200,
                   ),
                 ),
                 child: Row(
@@ -360,7 +454,9 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: hasEmptyADL ? Colors.orange.shade100 : Colors.green.shade100,
+                        color: hasEmptyADL
+                            ? Colors.orange.shade100
+                            : Colors.green.shade100,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -378,7 +474,9 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: hasEmptyADL ? Colors.orange.shade800 : Colors.green.shade800,
+                          color: hasEmptyADL
+                              ? Colors.orange.shade800
+                              : Colors.green.shade800,
                         ),
                       ),
                     ),
@@ -429,7 +527,8 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.blue.shade50,
                             borderRadius: BorderRadius.circular(10),
@@ -455,17 +554,22 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                     ),
                     const SizedBox(height: 12),
                     ..._adls.keys.map((key) {
-                      final label = key.split('_').map((e) =>
-                      e[0].toUpperCase() + e.substring(1)
-                      ).join(' ');
+                      final label = key
+                          .split('_')
+                          .map((e) => e[0].toUpperCase() + e.substring(1))
+                          .join(' ');
                       final isSelected = _adls[key] != null;
                       return Container(
                         margin: const EdgeInsets.only(bottom: 6),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
+                          color: isSelected
+                              ? Colors.blue.shade50
+                              : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isSelected ? Colors.blue.shade200 : Colors.grey.shade200,
+                            color: isSelected
+                                ? Colors.blue.shade200
+                                : Colors.grey.shade200,
                           ),
                         ),
                         child: ListTile(
@@ -477,8 +581,12 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                             label,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                              color: isSelected ? Colors.blue.shade700 : Colors.black87,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: isSelected
+                                  ? Colors.blue.shade700
+                                  : Colors.black87,
                             ),
                           ),
                           trailing: Row(
@@ -507,7 +615,9 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                               Icon(
                                 Icons.arrow_forward_ios,
                                 size: 14,
-                                color: isSelected ? Colors.blue.shade400 : Colors.grey.shade400,
+                                color: isSelected
+                                    ? Colors.blue.shade400
+                                    : Colors.grey.shade400,
                               ),
                             ],
                           ),
@@ -562,7 +672,8 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.green.shade50,
                             borderRadius: BorderRadius.circular(10),
@@ -588,17 +699,22 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                     ),
                     const SizedBox(height: 12),
                     ..._iadls.keys.map((key) {
-                      final label = key.split('_').map((e) =>
-                      e[0].toUpperCase() + e.substring(1)
-                      ).join(' ');
+                      final label = key
+                          .split('_')
+                          .map((e) => e[0].toUpperCase() + e.substring(1))
+                          .join(' ');
                       final isChecked = _iadls[key] ?? false;
                       return Container(
                         margin: const EdgeInsets.only(bottom: 6),
                         decoration: BoxDecoration(
-                          color: isChecked ? Colors.green.shade50 : Colors.grey.shade50,
+                          color: isChecked
+                              ? Colors.green.shade50
+                              : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isChecked ? Colors.green.shade200 : Colors.grey.shade200,
+                            color: isChecked
+                                ? Colors.green.shade200
+                                : Colors.grey.shade200,
                           ),
                         ),
                         child: CheckboxListTile(
@@ -610,8 +726,11 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                             label,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: isChecked ? FontWeight.w600 : FontWeight.w400,
-                              color: isChecked ? Colors.green.shade700 : Colors.black87,
+                              fontWeight:
+                                  isChecked ? FontWeight.w600 : FontWeight.w400,
+                              color: isChecked
+                                  ? Colors.green.shade700
+                                  : Colors.black87,
                             ),
                           ),
                           value: _iadls[key],
@@ -637,17 +756,7 @@ class _DailyProgressScreenState extends State<DailyProgressScreen> {
                 isFullWidth: true,
                 color: hasEmptyADL ? Colors.orange : Colors.blue.shade700,
               ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
-                },
-                child: const Text('← Back to Home'),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 32),
             ],
           ),
         ),

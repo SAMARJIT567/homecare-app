@@ -4,7 +4,8 @@ import 'package:homecare_app/admin/providers/admin_data_provider.dart';
 import 'package:homecare_app/admin/models/admin_models.dart';
 
 class ShiftsScreen extends StatefulWidget {
-  const ShiftsScreen({super.key});
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  const ShiftsScreen({super.key, required this.scaffoldKey});
 
   @override
   State<ShiftsScreen> createState() => _ShiftsScreenState();
@@ -149,7 +150,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                             child: _buildDetailCard(
                               icon: Icons.timer,
                               title: 'Total Hours',
-                              value: '${shift.totalHours.toStringAsFixed(2)} hrs',
+                              value:
+                                  '${shift.totalHours.toStringAsFixed(2)} hrs',
                               color: Colors.blue,
                             ),
                           ),
@@ -158,7 +160,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                             child: _buildDetailCard(
                               icon: Icons.attach_money,
                               title: 'Total Amount',
-                              value: '\$${shift.totalCharge.toStringAsFixed(2)}',
+                              value:
+                                  '\$${shift.totalCharge.toStringAsFixed(2)}',
                               color: Colors.green,
                             ),
                           ),
@@ -181,7 +184,9 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                               icon: Icons.info,
                               title: 'Status',
                               value: shift.status,
-                              color: shift.status == 'completed' ? Colors.green : Colors.orange,
+                              color: shift.status == 'completed'
+                                  ? Colors.green
+                                  : Colors.orange,
                             ),
                           ),
                         ],
@@ -220,8 +225,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                                       color: shift.adminStatus == 'approved'
                                           ? Colors.green
                                           : (shift.adminStatus == 'rejected'
-                                          ? Colors.red
-                                          : Colors.orange),
+                                              ? Colors.red
+                                              : Colors.orange),
                                     ),
                                   ),
                                 ],
@@ -231,7 +236,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      if (shift.adminStatus == 'pending' || shift.adminStatus == '')
+                      if (shift.adminStatus == 'pending' ||
+                          shift.adminStatus == '')
                         Row(
                           children: [
                             Expanded(
@@ -245,7 +251,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -264,7 +271,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -392,7 +400,8 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
         final query = _searchQuery.toLowerCase().trim();
         final caregiverName = shift.caregiverName.toLowerCase();
         final policyholderName = shift.policyholderName.toLowerCase();
-        return caregiverName.contains(query) || policyholderName.contains(query);
+        return caregiverName.contains(query) ||
+            policyholderName.contains(query);
       }
       return true;
     }).toList();
@@ -410,6 +419,10 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
         backgroundColor: Colors.blue.shade700,
         elevation: 0,
         centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => widget.scaffoldKey.currentState?.openDrawer(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
@@ -429,429 +442,460 @@ class _ShiftsScreenState extends State<ShiftsScreen> {
         child: provider.isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
-          children: [
-            // ✅ Search and Filter - Fully Working
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
                 children: [
-                  // ✅ Search Field
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _searchQuery.isNotEmpty
-                              ? Colors.blue.shade300
-                              : Colors.grey.shade200,
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search by name...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            size: 20,
-                            color: _searchQuery.isNotEmpty
-                                ? Colors.blue.shade700
-                                : Colors.grey.shade500,
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                            icon: const Icon(Icons.clear, size: 18),
-                            onPressed: _clearSearch,
-                          )
-                              : null,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // ✅ Filter Dropdown
+                  // ✅ Search and Filter - Fully Working
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _statusFilter != 'all'
-                            ? Colors.blue.shade300
-                            : Colors.grey.shade200,
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
                       ),
-                    ),
-                    child: DropdownButton<String>(
-                      value: _statusFilter,
-                      underline: const SizedBox(),
-                      icon: Icon(
-                        Icons.filter_list,
-                        size: 20,
-                        color: _statusFilter != 'all'
-                            ? Colors.blue.shade700
-                            : Colors.grey.shade500,
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'all',
-                          child: Text('All', style: TextStyle(fontSize: 13)),
-                        ),
-                        DropdownMenuItem(
-                          value: 'completed',
-                          child: Text('Completed', style: TextStyle(fontSize: 13)),
-                        ),
-                        DropdownMenuItem(
-                          value: 'pending',
-                          child: Text('Pending', style: TextStyle(fontSize: 13)),
-                        ),
-                        DropdownMenuItem(
-                          value: 'active',
-                          child: Text('Active', style: TextStyle(fontSize: 13)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.shade100,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
-                      onChanged: (value) {
-                        setState(() {
-                          _statusFilter = value!;
-                        });
-                      },
+                    ),
+                    child: Row(
+                      children: [
+                        // ✅ Search Field
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _searchQuery.isNotEmpty
+                                    ? Colors.blue.shade300
+                                    : Colors.grey.shade200,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Search by name...',
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  size: 20,
+                                  color: _searchQuery.isNotEmpty
+                                      ? Colors.blue.shade700
+                                      : Colors.grey.shade500,
+                                ),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: _clearSearch,
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // ✅ Filter Dropdown
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _statusFilter != 'all'
+                                  ? Colors.blue.shade300
+                                  : Colors.grey.shade200,
+                            ),
+                          ),
+                          child: DropdownButton<String>(
+                            value: _statusFilter,
+                            underline: const SizedBox(),
+                            icon: Icon(
+                              Icons.filter_list,
+                              size: 20,
+                              color: _statusFilter != 'all'
+                                  ? Colors.blue.shade700
+                                  : Colors.grey.shade500,
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'all',
+                                child:
+                                    Text('All', style: TextStyle(fontSize: 13)),
+                              ),
+                              DropdownMenuItem(
+                                value: 'completed',
+                                child: Text('Completed',
+                                    style: TextStyle(fontSize: 13)),
+                              ),
+                              DropdownMenuItem(
+                                value: 'pending',
+                                child: Text('Pending',
+                                    style: TextStyle(fontSize: 13)),
+                              ),
+                              DropdownMenuItem(
+                                value: 'active',
+                                child: Text('Active',
+                                    style: TextStyle(fontSize: 13)),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _statusFilter = value!;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // ✅ Filter Status & Results Count
-            if (filteredShifts.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Text(
-                    //   'Showing ${filteredShifts.length} shifts',
-                    //   style: TextStyle(
-                    //     fontSize: 12,
-                    //     color: Colors.grey.shade600,
-                    //   ),
-                    // ),
-                    if (_searchQuery.isNotEmpty || _statusFilter != 'all')
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                            _statusFilter = 'all';
-                          });
-                        },
-                        child: const Text(
-                          'Clear All Filters',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            // ✅ Shifts List
-            Expanded(
-              child: filteredShifts.isEmpty
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 60,
-                      color: Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _searchQuery.isNotEmpty || _statusFilter != 'all'
-                          ? 'No matching shifts found'
-                          : 'No shifts available',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _searchQuery.isNotEmpty || _statusFilter != 'all'
-                          ? 'Try adjusting your filters'
-                          : 'Shifts will appear here',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_searchQuery.isNotEmpty || _statusFilter != 'all')
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _searchQuery = '';
-                            _searchController.clear();
-                            _statusFilter = 'all';
-                          });
-                        },
-                        icon: const Icon(Icons.clear_all),
-                        label: const Text('Clear Filters'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade700,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              )
-                  : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filteredShifts.length,
-                itemBuilder: (context, index) {
-                  final shift = filteredShifts[index];
-                  final adminStatus = shift.adminStatus ?? 'pending';
-
-                  return InkWell(
-                    onTap: () => _showShiftDetail(shift),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade100,
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: adminStatus == 'approved'
-                              ? Colors.green.shade200
-                              : (adminStatus == 'rejected'
-                              ? Colors.red.shade200
-                              : Colors.grey.shade200),
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 12),
+                  // ✅ Filter Status & Results Count
+                  if (filteredShifts.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.blue.shade400,
-                                            Colors.blue.shade700,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        shift.caregiverName.isNotEmpty
-                                            ? shift.caregiverName[0].toUpperCase()
-                                            : '?',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            shift.caregiverName,
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            shift.policyholderName,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                          if (_searchQuery.isNotEmpty || _statusFilter != 'all')
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _searchQuery = '';
+                                  _searchController.clear();
+                                  _statusFilter = 'all';
+                                });
+                              },
+                              child: const Text(
+                                'Clear All Filters',
+                                style: TextStyle(fontSize: 12),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: adminStatus == 'approved'
-                                      ? Colors.green.shade100
-                                      : (adminStatus == 'rejected'
-                                      ? Colors.red.shade100
-                                      : Colors.orange.shade100),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  adminStatus.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: adminStatus == 'approved'
-                                        ? Colors.green.shade700
-                                        : (adminStatus == 'rejected'
-                                        ? Colors.red.shade700
-                                        : Colors.orange.shade700),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              _buildInfoChip(
-                                Icons.calendar_today,
-                                shift.date,
-                                Colors.blue,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildInfoChip(
-                                Icons.access_time,
-                                '${shift.timeIn} - ${shift.timeOut ?? 'N/A'}',
-                                Colors.orange,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              _buildInfoChip(
-                                Icons.timer,
-                                '${shift.totalHours.toStringAsFixed(2)} hrs',
-                                Colors.purple,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildInfoChip(
-                                Icons.attach_money,
-                                '\$${shift.totalCharge.toStringAsFixed(2)}',
-                                Colors.green,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(
+                            ),
+                        ],
+                      ),
+                    ),
+                  // ✅ Shifts List
+                  Expanded(
+                    child: filteredShifts.isEmpty
+                        ? Center(
+                            child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  Icons.touch_app,
-                                  size: 14,
+                                  Icons.search_off,
+                                  size: 60,
                                   color: Colors.grey.shade400,
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(height: 12),
                                 Text(
-                                  'Tap to view full details',
+                                  _searchQuery.isNotEmpty ||
+                                          _statusFilter != 'all'
+                                      ? 'No matching shifts found'
+                                      : 'No shifts available',
                                   style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade400,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade600,
                                   ),
                                 ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _searchQuery.isNotEmpty ||
+                                          _statusFilter != 'all'
+                                      ? 'Try adjusting your filters'
+                                      : 'Shifts will appear here',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                if (_searchQuery.isNotEmpty ||
+                                    _statusFilter != 'all')
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _searchQuery = '';
+                                        _searchController.clear();
+                                        _statusFilter = 'all';
+                                      });
+                                    },
+                                    icon: const Icon(Icons.clear_all),
+                                    label: const Text('Clear Filters'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue.shade700,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: filteredShifts.length,
+                            itemBuilder: (context, index) {
+                              final shift = filteredShifts[index];
+                              final adminStatus =
+                                  shift.adminStatus ?? 'pending';
+
+                              return InkWell(
+                                onTap: () => _showShiftDetail(shift),
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.shade100,
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                    border: Border.all(
+                                      color: adminStatus == 'approved'
+                                          ? Colors.green.shade200
+                                          : (adminStatus == 'rejected'
+                                              ? Colors.red.shade200
+                                              : Colors.grey.shade200),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        Colors.blue.shade400,
+                                                        Colors.blue.shade700,
+                                                      ],
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  child: Text(
+                                                    shift.caregiverName
+                                                            .isNotEmpty
+                                                        ? shift.caregiverName[0]
+                                                            .toUpperCase()
+                                                        : '?',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        shift.caregiverName,
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                      Text(
+                                                        shift.policyholderName,
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors
+                                                              .grey.shade600,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: adminStatus == 'approved'
+                                                  ? Colors.green.shade100
+                                                  : (adminStatus == 'rejected'
+                                                      ? Colors.red.shade100
+                                                      : Colors.orange.shade100),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              adminStatus.toUpperCase(),
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                                color: adminStatus == 'approved'
+                                                    ? Colors.green.shade700
+                                                    : (adminStatus == 'rejected'
+                                                        ? Colors.red.shade700
+                                                        : Colors
+                                                            .orange.shade700),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          _buildInfoChip(
+                                            Icons.calendar_today,
+                                            shift.date,
+                                            Colors.blue,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildInfoChip(
+                                            Icons.access_time,
+                                            '${shift.timeIn} - ${shift.timeOut ?? 'N/A'}',
+                                            Colors.orange,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          _buildInfoChip(
+                                            Icons.timer,
+                                            '${shift.totalHours.toStringAsFixed(2)} hrs',
+                                            Colors.purple,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildInfoChip(
+                                            Icons.attach_money,
+                                            '\$${shift.totalCharge.toStringAsFixed(2)}',
+                                            Colors.green,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 6),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.touch_app,
+                                              size: 14,
+                                              color: Colors.grey.shade400,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              'Tap to view full details',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey.shade400,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (adminStatus == 'pending' ||
+                                          adminStatus == '')
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: ElevatedButton.icon(
+                                                onPressed: () => _approveShift(
+                                                    shift.id, 'approved'),
+                                                icon: const Icon(Icons.check,
+                                                    size: 16),
+                                                label: const Text('Approve'),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.green,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 10),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: ElevatedButton.icon(
+                                                onPressed: () => _approveShift(
+                                                    shift.id, 'rejected'),
+                                                icon: const Icon(Icons.close,
+                                                    size: 16),
+                                                label: const Text('Reject'),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.red,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(vertical: 10),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          if (adminStatus == 'pending' || adminStatus == '')
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _approveShift(shift.id, 'approved'),
-                                    icon: const Icon(Icons.check, size: 16),
-                                    label: const Text('Approve'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _approveShift(shift.id, 'rejected'),
-                                    icon: const Icon(Icons.close, size: 16),
-                                    label: const Text('Reject'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

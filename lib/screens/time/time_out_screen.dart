@@ -6,6 +6,7 @@ import 'package:homecare_app/widgets/custom_text_field.dart';
 import 'package:homecare_app/widgets/loading_widget.dart';
 import 'package:homecare_app/core/utils/date_formatter.dart';
 import 'package:homecare_app/screens/home/home_screen.dart';
+import 'package:homecare_app/core/utils/globals.dart';
 
 class TimeOutScreen extends StatefulWidget {
   const TimeOutScreen({super.key});
@@ -33,7 +34,8 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
     );
     if (picked != null) {
       setState(() {
-        _selectedTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        _selectedTime =
+            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -77,12 +79,15 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
           ),
         );
       } else {
-        final totalHours = timeProvider.totalHours?.toStringAsFixed(2) ?? '0.00';
-        final totalCharge = timeProvider.totalCharge?.toStringAsFixed(2) ?? '0.00';
+        final totalHours =
+            timeProvider.totalHours?.toStringAsFixed(2) ?? '0.00';
+        final totalCharge =
+            timeProvider.totalCharge?.toStringAsFixed(2) ?? '0.00';
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Shift completed! Total: $totalHours hrs, Charge: \$$totalCharge'),
+            content: Text(
+                '✅ Shift completed! Total: $totalHours hrs, Charge: \$$totalCharge'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
@@ -118,249 +123,287 @@ class _TimeOutScreenState extends State<TimeOutScreen> {
   Widget build(BuildContext context) {
     final timeProvider = Provider.of<TimeProvider>(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.blue.shade50, Colors.white],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'End Shift',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: Colors.blue.shade700,
+        elevation: 0,
+        centerTitle: false,
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.red.shade600, Colors.red.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.shade200.withOpacity(0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.white],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          physics: const BouncingScrollPhysics(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.red.shade700, Colors.red.shade400],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    child: const Icon(
-                      Icons.stop,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.shade200.withOpacity(0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'End Shift',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        Text(
-                          'Complete your shift',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.white.withOpacity(0.85),
-                          ),
+                        child: const Icon(
+                          Icons.stop_circle_outlined,
+                          color: Colors.white,
+                          size: 28,
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Summary Card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Shift Summary',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.login,
-                              color: Colors.blue,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
                             const Text(
-                              'Time In:',
+                              'End Shift',
                               style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Complete your daily shift',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withOpacity(0.9),
                               ),
                             ),
                           ],
                         ),
-                        Text(
-                          timeProvider.timeInValue ?? 'Not started',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
-                            fontSize: 13,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Summary Card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.summarize_outlined,
+                              size: 18, color: Colors.blue),
+                          SizedBox(width: 8),
+                          Text(
+                            'Shift Summary',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.shade100),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.login_rounded,
+                                  color: Colors.blue,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Time In:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: Colors.blue.shade900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              timeProvider.timeInValue ?? 'Not started',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () => _selectTime(context),
+                        borderRadius: BorderRadius.circular(12),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Time Out',
+                            labelStyle: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w600),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Colors.blue, width: 2),
+                            ),
+                            prefixIcon: const Icon(Icons.access_time_filled,
+                                color: Colors.blue),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          child: Text(
+                            _selectedTime,
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w500),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  InkWell(
-                    onTap: () => _selectTime(context),
-                    borderRadius: BorderRadius.circular(8),
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: 'Time Out',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Colors.blue, width: 2),
-                        ),
-                        prefixIcon: const Icon(Icons.access_time, size: 16),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        isDense: true,
                       ),
-                      child: Text(
-                        _selectedTime,
-                        style: const TextStyle(fontSize: 13),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Rate Card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.payments_outlined,
+                              size: 18, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(
+                            'Payment Details',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        controller: _rateController,
+                        label: 'Hourly Rate (\$)',
+                        hint: 'e.g. 25.00',
+                        prefixIcon: Icons.attach_money,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter rate';
+                          }
+                          final rate = double.tryParse(value);
+                          if (rate == null || rate <= 0) {
+                            return 'Please enter a valid rate';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Button
+                (_isLoading || timeProvider.isLoading)
+                    ? const Center(child: LoadingWidget())
+                    : CustomButton(
+                        onPressed: _timeOut,
+                        text: '⏹ End Shift',
+                        isFullWidth: true,
+                        color: Colors.red.shade600,
+                      ),
+
+                const SizedBox(height: 16),
+                _buildLegalDisclaimer(),
+                const SizedBox(height: 20),
+              ],
             ),
-            const SizedBox(height: 10),
-
-            // Rate Card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade100,
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '💰 Rate',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  CustomTextField(
-                    controller: _rateController,
-                    label: 'Rate (\$)',
-                    hint: 'Enter hourly rate',
-                    prefixIcon: Icons.attach_money,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter rate';
-                      }
-                      final rate = double.tryParse(value);
-                      if (rate == null || rate <= 0) {
-                        return 'Please enter valid rate';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Button
-            (_isLoading || timeProvider.isLoading)
-                ? const LoadingWidget()
-                : CustomButton(
-              onPressed: _timeOut,
-              text: '⏹ End Shift',
-              isFullWidth: true,
-              color: Colors.red,
-            ),
-
-            const SizedBox(height: 8),
-            _buildLegalDisclaimer(),
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );

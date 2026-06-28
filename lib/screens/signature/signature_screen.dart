@@ -7,6 +7,8 @@ import 'package:homecare_app/providers/signature_provider.dart';
 import 'package:homecare_app/widgets/custom_button.dart';
 import 'package:homecare_app/widgets/loading_widget.dart';
 import 'package:homecare_app/screens/report/weekly_report_screen.dart';
+import 'package:homecare_app/screens/home/home_screen.dart';
+import 'package:homecare_app/core/utils/globals.dart';
 
 class SignatureScreen extends StatefulWidget {
   const SignatureScreen({super.key});
@@ -52,6 +54,29 @@ class _SignatureScreenState extends State<SignatureScreen> {
         });
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadExistingSignatures();
+    });
+  }
+
+  Future<void> _loadExistingSignatures() async {
+    final timeProvider = Provider.of<TimeProvider>(context, listen: false);
+    final signatureProvider =
+        Provider.of<SignatureProvider>(context, listen: false);
+
+    if (timeProvider.currentEntryId != null) {
+      await signatureProvider.getSignature(timeProvider.currentEntryId!);
+
+      if (signatureProvider.signature != null) {
+        setState(() {
+          _caregiverSigned =
+              signatureProvider.signature!.caregiverSignature.isNotEmpty;
+          _policyholderSigned =
+              signatureProvider.signature!.policyholderSignature.isNotEmpty;
+        });
+      }
+    }
   }
 
   @override
@@ -63,10 +88,11 @@ class _SignatureScreenState extends State<SignatureScreen> {
 
   Future<void> _saveSignatures() async {
     final timeProvider = Provider.of<TimeProvider>(context, listen: false);
-    final signatureProvider = Provider.of<SignatureProvider>(context, listen: false);
+    final signatureProvider =
+        Provider.of<SignatureProvider>(context, listen: false);
 
     if (timeProvider.currentEntryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text('Please time-in first!'),
           backgroundColor: Colors.orange,
@@ -76,7 +102,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
     }
 
     if (!_caregiverSigned || !_policyholderSigned) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         const SnackBar(
           content: Text('Please provide both signatures!'),
           backgroundColor: Colors.orange,
@@ -94,7 +120,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
       final policyholderSignature = await _policyholderController.toPngBytes();
 
       if (caregiverSignature == null || policyholderSignature == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Globals.scaffoldMessengerKey.currentState?.showSnackBar(
           const SnackBar(
             content: Text('Failed to capture signatures. Please try again.'),
             backgroundColor: Colors.red,
@@ -106,8 +132,10 @@ class _SignatureScreenState extends State<SignatureScreen> {
         return;
       }
 
-      final caregiverBase64 = 'data:image/png;base64,${base64Encode(caregiverSignature)}';
-      final policyholderBase64 = 'data:image/png;base64,${base64Encode(policyholderSignature)}';
+      final caregiverBase64 =
+          'data:image/png;base64,${base64Encode(caregiverSignature)}';
+      final policyholderBase64 =
+          'data:image/png;base64,${base64Encode(policyholderSignature)}';
 
       final response = await signatureProvider.saveSignature(
         timeEntryId: timeProvider.currentEntryId!,
@@ -118,7 +146,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
       if (!mounted) return;
 
       if (!response.status) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Globals.scaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(
             content: Text(response.message),
             backgroundColor: Colors.red,
@@ -128,27 +156,20 @@ class _SignatureScreenState extends State<SignatureScreen> {
           _isLoading = false;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        Globals.scaffoldMessengerKey.currentState?.showSnackBar(
           const SnackBar(
             content: Text('✅ Signatures saved successfully!'),
             backgroundColor: Colors.green,
           ),
         );
 
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const WeeklyReportScreen(),
-              ),
-            );
-          }
+        await _loadExistingSignatures();
+        setState(() {
+          _isLoading = false;
         });
       }
     } catch (e) {
-      print('🔴 Signature Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      Globals.scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
           backgroundColor: Colors.red,
@@ -171,13 +192,165 @@ class _SignatureScreenState extends State<SignatureScreen> {
     });
   }
 
+  Widget _buildSignaturePreview(String label, String base64Image) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black54,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade100,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.memory(
+              base64Decode(base64Image.split(',').last),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final signatureProvider = Provider.of<SignatureProvider>(context);
     final bool canSave = _caregiverSigned && _policyholderSigned;
 
+    if (_isLoading || signatureProvider.isLoading) {
+      return const LoadingWidget();
+    }
+
+    if (signatureProvider.signature != null &&
+        _caregiverSigned &&
+        _policyholderSigned) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Signatures',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Colors.blue.shade700,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        body: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.blue.shade50, Colors.white],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.green.shade100, width: 8),
+                ),
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  size: 80,
+                  color: Colors.green.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  'Capture Completed!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Signature Capture Completed. Kindly go to the Report page.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: _buildSignaturePreview(
+                      'Caregiver',
+                      signatureProvider.signature!.caregiverSignature,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSignaturePreview(
+                      'Policyholder',
+                      signatureProvider.signature!.policyholderSignature,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: CustomButton(
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const HomeScreen(initialIndex: 0)),
+                      (route) => false,
+                    );
+                  },
+                  text: '🏠 Go to Dashboard',
+                  color: Colors.blue.shade700,
+                  isFullWidth: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text(
           'Signatures',
@@ -200,9 +373,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
           ),
         ],
       ),
-      body: (_isLoading || signatureProvider.isLoading)
-          ? const LoadingWidget()
-          : Container(
+      body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -214,7 +385,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              // Caregiver Signature Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -311,23 +481,48 @@ class _SignatureScreenState extends State<SignatureScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      height: 140,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _caregiverSigned
-                              ? Colors.green.shade300
-                              : Colors.grey.shade300,
-                          width: _caregiverSigned ? 2 : 1,
+                    if (signatureProvider.signature != null &&
+                        signatureProvider
+                            .signature!.caregiverSignature.isNotEmpty &&
+                        !_caregiverSigned)
+                      Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.green.shade300, width: 2),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.memory(
+                            base64Decode(signatureProvider
+                                .signature!.caregiverSignature
+                                .split(',')
+                                .last),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _caregiverSigned
+                                ? Colors.green.shade300
+                                : Colors.grey.shade300,
+                            width: _caregiverSigned ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
+                        ),
+                        child: Signature(
+                          controller: _caregiverController,
+                        ),
                       ),
-                      child: Signature(
-                        controller: _caregiverController,
-                      ),
-                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -350,8 +545,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Policyholder Signature Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -448,23 +641,48 @@ class _SignatureScreenState extends State<SignatureScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      height: 140,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _policyholderSigned
-                              ? Colors.green.shade300
-                              : Colors.grey.shade300,
-                          width: _policyholderSigned ? 2 : 1,
+                    if (signatureProvider.signature != null &&
+                        signatureProvider
+                            .signature!.policyholderSignature.isNotEmpty &&
+                        !_policyholderSigned)
+                      Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.green.shade300, width: 2),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
                         ),
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.memory(
+                            base64Decode(signatureProvider
+                                .signature!.policyholderSignature
+                                .split(',')
+                                .last),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _policyholderSigned
+                                ? Colors.green.shade300
+                                : Colors.grey.shade300,
+                            width: _policyholderSigned ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
+                        ),
+                        child: Signature(
+                          controller: _policyholderController,
+                        ),
                       ),
-                      child: Signature(
-                        controller: _policyholderController,
-                      ),
-                    ),
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -487,15 +705,12 @@ class _SignatureScreenState extends State<SignatureScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Save Button
               CustomButton(
-                onPressed: canSave ? _onSavePressed : null,
+                onPressed: canSave ? _saveSignatures : null,
                 text: '💾 Save Signatures',
                 isFullWidth: true,
                 color: canSave ? Colors.blue.shade700 : Colors.grey,
               ),
-
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(10),
@@ -524,23 +739,11 @@ class _SignatureScreenState extends State<SignatureScreen> {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('← Back to Home'),
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
-  }
-
-  void _onSavePressed() {
-    _saveSignatures();
   }
 }

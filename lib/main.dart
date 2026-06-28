@@ -12,6 +12,7 @@ import 'package:homecare_app/screens/home/home_screen.dart';
 import 'package:homecare_app/admin/screens/admin_login_screen.dart';
 import 'package:homecare_app/admin/screens/admin_dashboard_screen.dart';
 import 'package:homecare_app/core/utils/connectivity_checker.dart';
+import 'package:homecare_app/core/utils/globals.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,15 +36,16 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Homecare App',
         debugShowCheckedModeBanner: false,
+        scaffoldMessengerKey: Globals.scaffoldMessengerKey,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const ConnectivityChecker(
-            child: AuthWrapper(),
-          ),
+          '/': (context) => ConnectivityChecker(
+                child: const AuthWrapper(),
+              ),
           '/admin-login': (context) => const AdminLoginScreen(),
           '/admin-dashboard': (context) => const AdminDashboardScreen(),
         },
@@ -61,8 +63,10 @@ class AuthWrapper extends StatelessWidget {
     final adminAuthProvider = Provider.of<AdminAuthProvider>(context);
 
     // ✅ Debug - Print current state
-    print('🟡 AuthWrapper: adminAuthProvider.isAuthenticated = ${adminAuthProvider.isAuthenticated}');
-    print('🟡 AuthWrapper: authProvider.isAuthenticated = ${authProvider.isAuthenticated}');
+    print(
+        '🟡 AuthWrapper: adminAuthProvider.isAuthenticated = ${adminAuthProvider.isAuthenticated}');
+    print(
+        '🟡 AuthWrapper: authProvider.isAuthenticated = ${authProvider.isAuthenticated}');
 
     // ✅ Check loading states first
     if (authProvider.isLoading || adminAuthProvider.isLoading) {
