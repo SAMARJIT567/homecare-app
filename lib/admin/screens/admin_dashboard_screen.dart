@@ -197,21 +197,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildQuickStat('Today', '24'),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildQuickStat('This Week', '156'),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildQuickStat('This Month', '432'),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -261,35 +246,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildQuickStat(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
       ),
     );
   }

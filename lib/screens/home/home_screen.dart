@@ -40,16 +40,14 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final timeProvider = Provider.of<TimeProvider>(context, listen: false);
       final signatureProvider =
-          Provider.of<SignatureProvider>(context, listen: false);
+      Provider.of<SignatureProvider>(context, listen: false);
       final progressProvider =
-          Provider.of<ProgressProvider>(context, listen: false);
+      Provider.of<ProgressProvider>(context, listen: false);
 
-      // Load today's log
       final date = DateFormatter.getCurrentDate();
       await timeProvider.getTodayLog(date);
       print('✅ Today log loaded');
 
-      // Check status if entry exists
       if (timeProvider.currentEntryId != null) {
         final entryId = timeProvider.currentEntryId!;
 
@@ -60,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
         print('✅ Status data loaded');
       }
 
-      // Update UI with actual data
       if (mounted) {
         setState(() {
           _signaturesExist = signatureProvider.signature != null;
@@ -163,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Homecare App',
+          'Absolute Choice Homecare',
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -188,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
+                    (route) => false,
               );
             },
           ),
@@ -294,23 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildQuickStat('Today', '24', Icons.today),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildQuickStat(
-                              'This Week', '156', Icons.weekend),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildQuickStat(
-                              'This Month', '432', Icons.calendar_month),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               ),
@@ -320,10 +300,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 'Today\'s Summary',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 10),
 
@@ -355,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _buildSummaryCard(
                       title: 'Hours',
                       value:
-                          timeProvider.totalHours?.toStringAsFixed(1) ?? '0.0',
+                      timeProvider.totalHours?.toStringAsFixed(1) ?? '0.0',
                       icon: Icons.timer,
                       color: Colors.green.shade700,
                     ),
@@ -371,8 +351,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: isActive
                           ? Colors.green.shade700
                           : (isCompleted
-                              ? Colors.grey
-                              : Colors.orange.shade700),
+                          ? Colors.grey
+                          : Colors.orange.shade700),
                     ),
                   ),
                 ],
@@ -383,10 +363,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 'Quick Actions',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 10),
 
@@ -512,6 +492,43 @@ class _HomeScreenState extends State<HomeScreen> {
                             });
                           },
                         ),
+
+                      // ✅ FIXED: Start New Shift Button - Reset only, stay on Dashboard
+                      const SizedBox(height: 8),
+                      HomeActionCard(
+                        icon: Icons.add_circle_outline,
+                        title: 'Start New Shift',
+                        subtitle: 'Begin another shift',
+                        color: Colors.teal.shade700,
+                        onTap: () {
+                          // Reset everything for fresh shift
+                          final timeProvider = Provider.of<TimeProvider>(context, listen: false);
+                          final progressProvider = Provider.of<ProgressProvider>(context, listen: false);
+                          final signatureProvider = Provider.of<SignatureProvider>(context, listen: false);
+
+                          // Reset all providers
+                          timeProvider.reset();
+                          progressProvider.reset();
+                          signatureProvider.reset();
+
+                          // Reset local flags ONLY - Stay on Dashboard
+                          setState(() {
+                            _progressCompleted = false;
+                            _signaturesExist = false;
+                            _isLoading = false;
+                            // ✅ IMPORTANT: Do NOT change _selectedIndex
+                          });
+
+                          // Show confirmation
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('🔄 Ready for a new shift! Click "Start Shift" to begin.'),
+                              backgroundColor: Colors.teal,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
               ],
@@ -695,7 +712,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 32),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade700.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
@@ -725,35 +742,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-  }
-
-  Widget _buildQuickStat(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSummaryCard({

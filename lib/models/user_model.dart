@@ -1,3 +1,5 @@
+// models/user_model.dart
+
 class UserModel {
   final int id;
   final String name;
@@ -21,12 +23,17 @@ class UserModel {
       return 0;
     }
 
+    String? _parseString(dynamic value) {
+      if (value == null) return null;
+      return value.toString().trim();
+    }
+
     return UserModel(
       id: _parseInt(json['id']),
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'],
-      address: json['address'],
+      name: _parseString(json['name']) ?? '',
+      email: _parseString(json['email']) ?? '',
+      phone: _parseString(json['phone']),
+      address: _parseString(json['address']),
     );
   }
 
@@ -39,4 +46,49 @@ class UserModel {
       'address': address,
     };
   }
+
+  // ✅ CopyWith method for easy updates
+  UserModel copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? address,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+    );
+  }
+
+  // ✅ Helper to check if phone is available
+  bool get hasPhone => phone != null && phone!.isNotEmpty;
+
+  // ✅ Helper to get formatted phone
+  String get formattedPhone {
+    if (!hasPhone) return 'Not available';
+    return phone!;
+  }
+
+  // ✅ Helper to get display name
+  String get displayName {
+    return name.isEmpty ? 'Caregiver' : name;
+  }
+
+  @override
+  String toString() {
+    return 'UserModel(id: $id, name: $name, email: $email, phone: $phone, address: $address)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserModel && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

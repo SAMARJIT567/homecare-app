@@ -22,6 +22,9 @@ class ApiEndpoints {
   static const String saveSignature = 'api/signature/save.php';
   static const String getSignature = 'api/signature/get.php';
 
+  // Policyholders for caregivers
+  static const String policyholdersList = 'api/policyholders/list.php';
+
   // Full URLs with proper encoding
   static String getFullUrl(String endpoint) {
     final base = AppConstants.baseUrl.endsWith('/')

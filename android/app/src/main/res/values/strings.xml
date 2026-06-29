@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Homecare App</string>
+    <string name="app_name">Absolute Choice Homecare</string>
     <string name="iadl_title">Instrumental ADLs (IADLs)</string>
     <string name="reset_all">Reset All</string>
     <string name="iadl_header">📋 Instrumental Activities of Daily Living</string>

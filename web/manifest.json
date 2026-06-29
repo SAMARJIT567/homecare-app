@@ -1,6 +1,6 @@
 {
-    "name": "homecare_app",
-    "short_name": "homecare_app",
+    "name": "Absolute Choice Homecare",
+    "short_name": "Absolute Choice Homecare",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

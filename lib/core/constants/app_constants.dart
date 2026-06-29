@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'Homecare App';
+  static const String appName = 'Absolute Choice Homecare';
   static const String baseUrl = 'http://43.205.243.18/flutter_backend/';
 
   // Storage Keys

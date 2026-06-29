@@ -57,10 +57,11 @@ class AdminSideMenu extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Admin Panel',
+                    'Absolute Choice Homecare',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.2,
                     ),
@@ -158,7 +159,7 @@ class AdminSideMenu extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '2024 Homecare App',
+                    '2024 Absolute Choice Homecare',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.white.withOpacity(0.4),

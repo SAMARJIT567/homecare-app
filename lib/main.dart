@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AdminDataProvider()),
       ],
       child: MaterialApp(
-        title: 'Homecare App',
+        title: 'Absolute Choice Homecare',
         debugShowCheckedModeBanner: false,
         scaffoldMessengerKey: Globals.scaffoldMessengerKey,
         theme: ThemeData(

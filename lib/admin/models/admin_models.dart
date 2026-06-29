@@ -131,6 +131,7 @@ class Policyholder {
   final String phone;
   final String? address;
   final int totalShifts;
+  final int completedShifts;
 
   Policyholder({
     required this.id,
@@ -139,6 +140,7 @@ class Policyholder {
     required this.phone,
     this.address,
     this.totalShifts = 0,
+    this.completedShifts = 0,
   });
 
   factory Policyholder.fromJson(Map<String, dynamic> json) {
@@ -156,8 +158,12 @@ class Policyholder {
       phone: json['phone'] ?? '',
       address: json['address'],
       totalShifts: _parseInt(json['total_shifts']),
+      completedShifts: _parseInt(json['completed_shifts']),
     );
   }
+
+  // ✅ Helper to check if policyholder has completed shifts
+  bool get hasCompletedShifts => completedShifts > 0;
 }
 
 class Shift {
